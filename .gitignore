@@ -11,3 +11,7 @@ next-env.d.ts
 # Local tool state
 .claude/
 .superpowers/
+
+# Supabase CLI
+supabase/.branches
+supabase/.temp/

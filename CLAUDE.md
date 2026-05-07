@@ -62,6 +62,22 @@ Phase A is the only phase in the repo. Phase B (Reference Data), C (Customers + 
 
 The user portal app (`apps/web` in the handoff) is not in this repo. It lives at `../shippingcow-nextjs/` or `../ShippingCow/` (separate repos). The admin portal connects to the same Supabase project as the user portal, but the two are deployed independently.
 
+## Database
+
+Supabase is the single source of truth for all data. Migrations live in `supabase/migrations/` as numbered SQL files (e.g. `0001_phase_a.sql`, `0002_reference_tables.sql`). They are applied **manually via the Supabase Dashboard SQL Editor** — paste, run, verify in Table Editor. The Supabase CLI is installed as a devDependency (`npx supabase ...`) and can be used later for type generation, but project linking is not currently set up.
+
+**Migration workflow:**
+1. Write `supabase/migrations/000N_<name>.sql` using `CREATE TABLE IF NOT EXISTS` + `DROP POLICY IF EXISTS` so it's idempotent.
+2. Open Supabase Dashboard → SQL Editor → New query → paste contents → Run.
+3. Verify Table Editor reflects the new schema.
+4. Commit the SQL file.
+
+**RLS posture:** every table has explicit policies. Most have `using (false) with check (false)` — meaning end-users cannot read or write directly; only the service role (admin portal via `adminClient()`) can. The `audit_log` table additionally uses BEFORE UPDATE/DELETE triggers to physically reject mutations even from the service role.
+
+**Reference tables** (`zone_matrix`, `our_carrier_rates`, `carrier_retail_rates`, `our_warehousing_fees`, `our_logistics_fees`, `category_benchmarks`) carry `effective_from` / `effective_to` dates so historical analytics keep their original rates. Never UPDATE a published row to change a rate — instead insert a new row with a new `effective_from`, and set the old row's `effective_to` to the day before. The Phase B.2 publish workflow automates this.
+
+**Seed data** is not in migrations. Run `npm run seed:ingest` with the `SEED_*_CSV` env vars set (see `supabase/seed/README.md`).
+
 ## Companion documents
 
 - `admin handoff v1(1).md` — primary spec. Brand tokens, schema, API contracts, build phases.

@@ -5,14 +5,16 @@ import { BRAND, px, pxSm } from '@/lib/brand';
 export function Card({
   children,
   onClick,
+  interactive: interactiveProp,
   style = {},
 }: {
   children: ReactNode;
   onClick?: () => void;
+  interactive?: boolean;
   style?: CSSProperties;
 }) {
   const [hov, setHov] = useState(false);
-  const interactive = !!onClick;
+  const interactive = interactiveProp ?? !!onClick;
   return (
     <div
       onClick={onClick}

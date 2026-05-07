@@ -72,21 +72,41 @@ Phase A split into:
 - `app/admin/setup-mfa/page.tsx` — `'use client'`. On mount: list factors, push to `/admin` if verified TOTP exists; else unenroll any unverified TOTP, call `mfa.enroll({ factorType: 'totp' })`, render QR (data URL) + manual secret. 6-digit input → `mfa.challenge` + `mfa.verify` → `/admin`.
 - Smoke test passed: founder login → MFA enroll → `/admin` reachable. Second non-admin user → `/403`. `audit_log` table empty (no mutations yet, expected).
 
-## Next Steps — Phase B (Reference Data)
+## Phase B.1 — DONE (read-only reference data UI)
 
-Reference Data = 6 tables + publish workflow. Blocks user portal analytics. See `admin handoff v1(1).md` §11.
+Per `docs/superpowers/plans/2026-05-06-phase-b-reference-data.md`, adapted to the manual-Dashboard migration flow established in A.1 (no Supabase CLI link).
 
-Per spec, Phase B builds:
-- Reference data tables (carriers, services, surcharges, fuel surcharges, accessorials, zone_maps).
-- Draft → Published workflow with effective-date windowing.
-- Admin CRUD UI under `/admin/reference`.
-- Server actions or `/api/admin/reference/*` route handlers (call `assertAdminRole` once built — Phase C — for now, middleware role header `x-admin-role` suffices).
-- Every successful mutation calls `logAudit(...)` with appropriate `AuditAction`. Extend the closed enum in `lib/audit.ts` only when adding new mutations.
+- `package.json` — added devDeps `csv-parse`, `tsx`, `supabase` + scripts `db:push`, `db:reset`, `db:types`, `seed:ingest`. Note: `db:push` / `db:reset` require `supabase link` which is not configured; use Dashboard SQL editor for migrations until linking is set up.
+- `.gitignore` — added `supabase/.branches`, `supabase/.temp/`.
+- `supabase/migrations/0002_reference_tables.sql` — 6 reference tables (`zone_matrix`, `our_carrier_rates`, `carrier_retail_rates`, `our_warehousing_fees`, `our_logistics_fees`, `category_benchmarks`) + `rate_card_drafts` + `scheduled_publishes`. All idempotent (`CREATE TABLE IF NOT EXISTS`, `DROP POLICY IF EXISTS`). Deny-all RLS on every table. Applied via Dashboard SQL editor.
+- `components/ui/data-table.tsx` — generic paginated read-only DataTable with brand styling.
+- `components/ui/card.tsx` — added `interactive?: boolean` prop so server components can flag hover-collapse without passing a function.
+- `lib/reference.ts` — table metadata (slugs, titles, descriptions, column configs) for all 6 tables. No `Database` type dependency (manual flow → no generated types yet).
+- `app/admin/reference/page.tsx` — replaces Phase A placeholder. Server component, `force-dynamic`. Renders 6 cards with live row counts + last `effective_from` per table. Shows `ERR / NOT APPLIED` if a table query errors (e.g., migration not yet run).
+- `app/admin/reference/[table]/page.tsx` — per-table read-only paginated view via DataTable. Reads up to 200 rows. Bogus slug → `notFound()`. Errors are caught and rendered as a red Card.
+- `supabase/seed/README.md` + `supabase/seed/ingest-csvs.ts` — `tsx`-runnable CSV seed script. `npm run seed:ingest` reads `SEED_*_CSV` env vars, upserts into the 6 tables in chunks of 1000 with the table's natural unique key as the conflict target. Re-runnable.
+- `CLAUDE.md` — added `## Database` section documenting the manual migration workflow, RLS posture, effective-date semantics, and seed flow.
 
-Sub-split suggestion:
-- **B.1** — schema migration (`0002_phase_b_reference.sql`) for the 6 tables + publish state column + RLS.
-- **B.2** — `/admin/reference` list + detail UI per table type.
-- **B.3** — publish workflow (draft → published, effective-date guard, supersede prior published row).
+### What's NOT in B.1
+- Supabase CLI project linking (deferred — requires interactive `supabase login` + DB password). Without linking, `db:push`, `db:reset`, `db:types` scripts will not run.
+- `lib/supabase/types.ts` (generated DB types) — deferred until CLI linking lands. `adminClient()` remains untyped (`SupabaseClient`, not `SupabaseClient<Database>`); reference tables use `Record<string, unknown>` rows.
+- npm peer-dep conflict — `eslint-config-next@16.2.5` requires `eslint@>=9` but the repo has `eslint@8.57.x`. `npm install --legacy-peer-deps` works around it. `next lint` and `next build`'s lint pass both error out on a circular-config issue but the actual TypeScript build succeeds. Fix path: pin `eslint-config-next` to a v15 that supports eslint v8, or upgrade eslint to v9.
+
+## Next Steps — Phase B.2 (publish workflow)
+
+Per spec §11 + plan "Out of scope" section:
+- 4-step UI: Edit → Validate → Preview Impact → Publish.
+- Inline spreadsheet editor (`react-data-grid` or similar).
+- `POST /api/admin/reference/[table]/validate` route handler.
+- `POST /api/admin/reference/[table]/preview-impact` route handler.
+- Publish path that writes to `rate_card_drafts.status = 'published'`, sets prior published row's `effective_to`, refreshes downstream materialized views (`mv_org_cost_summary` lives in user-portal repo, not admin — coordinate cross-repo).
+- Version history tab + diff view + roll back.
+- Scheduled-publish auto-trigger via Edge Function cron.
+- CSV import UI (currently CLI-only via the seed script).
+
+Before B.2:
+- Set up Supabase CLI linking so type generation (`db:types`) works. This unblocks proper typing of reference table writes.
+- Resolve eslint peer-dep mismatch.
 
 ---
 

@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #F4F7FF; font-family: 'DM Sans', sans-serif; }
+  button, input, textarea, select { border-radius: 0 !important; font-family: inherit; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #F4F7FF; }
+  ::-webkit-scrollbar-thumb { background: #1A202C; border: 2px solid #F4F7FF; }
+  ::-webkit-scrollbar-thumb:hover { background: #0052C9; }
+}

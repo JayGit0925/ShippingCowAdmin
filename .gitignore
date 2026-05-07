@@ -1,0 +1,13 @@
+node_modules/
+.next/
+.vercel/
+.env
+.env.local
+.env.*.local
+next-env.d.ts
+*.tsbuildinfo
+.DS_Store
+
+# Local tool state
+.claude/
+.superpowers/

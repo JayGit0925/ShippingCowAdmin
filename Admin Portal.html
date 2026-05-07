@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShippingCow — Admin Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=DM+Sans:wght@400;500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body, #root { height: 100%; width: 100%; overflow: hidden; }
+  body { font-family: 'DM Sans', sans-serif; background: #F4F7FF; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #F4F7FF; }
+  ::-webkit-scrollbar-thumb { background: #1A202C; border: 2px solid #F4F7FF; }
+  ::-webkit-scrollbar-thumb:hover { background: #0052C9; }
+  select, input, textarea, button { font-family: inherit; }
+  button { border-radius: 0 !important; }
+  input, textarea, select { border-radius: 0 !important; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+// ─── BRAND TOKENS ────────────────────────────────────────────────────────────
+const BRAND = {
+  blue: '#0052C9', yellow: '#FEB81B', charcoal: '#1A202C', pageBed: '#F4F7FF',
+  midBlue: '#3A7FDE', sky: '#B0C8F0', amber: '#E0A000', white: '#FFFFFF',
+  red: '#D64545', green: '#1A7A4A', teal: '#0D9488',
+};
+const px = (c = BRAND.charcoal) => `4px 4px 0 ${c}`;
+const pxSm = (c = BRAND.charcoal) => `2px 2px 0 ${c}`;
+
+// ─── SHARED MICRO-COMPONENTS ─────────────────────────────────────────────────
+const TIER_CFG = {
+  calf: { label: 'CALF', bg: '#e5e7eb', color: BRAND.charcoal },
+  cow:  { label: 'COW',  bg: BRAND.sky,  color: BRAND.blue },
+  bull: { label: 'BULL', bg: '#BBF7D0',  color: '#166534' },
+};
+const STATUS_CFG = {
+  active:         { label: 'ACTIVE',      bg: '#BBF7D0', color: '#166534' },
+  suspended:      { label: 'SUSPENDED',   bg: '#FEE2E2', color: '#991B1B' },
+  deactivated:    { label: 'DEACTIVATED', bg: '#e5e7eb', color: '#374151' },
+  payment_failed: { label: 'FAILED',      bg: '#FEF3C7', color: '#92400E' },
+};
+const SEV_CFG = {
+  critical:    { label: 'CRITICAL',    bg: '#D64545', color: '#fff' },
+  high:        { label: 'HIGH',        bg: '#E0A000', color: '#fff' },
+  medium:      { label: 'MEDIUM',      bg: '#0052C9', color: '#fff' },
+  opportunity: { label: 'OPPORTUNITY', bg: '#1A7A4A', color: '#fff' },
+  warning:     { label: 'WARNING',     bg: '#E0A000', color: '#fff' },
+  low:         { label: 'LOW',         bg: '#e5e7eb', color: BRAND.charcoal },
+};
+
+function Badge({ type = 'tier', value, style = {} }) {
+  const cfg = type === 'tier' ? TIER_CFG[value] : STATUS_CFG[value];
+  if (!cfg) return null;
+  return <span style={{ display:'inline-block', fontFamily:"'Press Start 2P',monospace", fontSize:'9px', padding:'3px 7px', background:cfg.bg, color:cfg.color, border:`2px solid ${BRAND.charcoal}`, boxShadow:pxSm(), letterSpacing:'0.04em', ...style }}>{cfg.label}</span>;
+}
+function SeverityBadge({ level }) {
+  const cfg = SEV_CFG[level] || SEV_CFG.low;
+  return <span style={{ display:'inline-block', fontFamily:"'Press Start 2P',monospace", fontSize:'8px', padding:'3px 6px', background:cfg.bg, color:cfg.color, border:`2px solid ${BRAND.charcoal}`, letterSpacing:'0.03em' }}>{cfg.label}</span>;
+}
+function Btn({ children, variant='primary', size='md', onClick, style={}, disabled=false }) {
+  const [hov, setHov] = React.useState(false);
+  const base = { fontFamily:"'Press Start 2P',monospace", fontSize:size==='sm'?'9px':size==='lg'?'13px':'10px', padding:size==='sm'?'6px 10px':size==='lg'?'14px 24px':'8px 14px', border:`3px solid ${BRAND.charcoal}`, cursor:disabled?'not-allowed':'pointer', opacity:disabled?0.5:1, transition:'box-shadow 0.08s,transform 0.08s', letterSpacing:'0.03em', display:'inline-flex', alignItems:'center', gap:'6px' };
+  const variants = { primary:{background:BRAND.yellow,color:BRAND.charcoal,boxShadow:px()}, blue:{background:BRAND.blue,color:BRAND.white,boxShadow:px()}, ghost:{background:'transparent',color:BRAND.charcoal,boxShadow:px()}, danger:{background:BRAND.red,color:BRAND.white,boxShadow:px()}, dark:{background:BRAND.charcoal,color:BRAND.yellow,boxShadow:`4px 4px 0 ${BRAND.blue}`} };
+  const v = variants[variant] || variants.primary;
+  return <button onClick={disabled?undefined:onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} style={{...base,...v,...style, boxShadow:hov&&!disabled?'none':v.boxShadow, transform:hov&&!disabled?'translate(2px,2px)':'none'}}>{children}</button>;
+}
+function Eyebrow({ children, style={} }) {
+  return <span style={{ fontFamily:"'Press Start 2P',monospace", fontSize:'9px', color:BRAND.blue, letterSpacing:'0.08em', display:'block', marginBottom:'6px', ...style }}>{children}</span>;
+}
+function Card({ children, style={}, onClick }) {
+  const [hov, setHov] = React.useState(false);
+  return <div onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} style={{ background:BRAND.white, border:`3px solid ${BRAND.charcoal}`, boxShadow:hov&&onClick?pxSm():px(), transform:hov&&onClick?'translate(2px,2px)':'none', transition:'box-shadow 0.08s,transform 0.08s', cursor:onClick?'pointer':'default', ...style }}>{children}</div>;
+}
+function TrendArrow({ value }) {
+  return <span style={{ color:value>=0?BRAND.green:BRAND.red, fontSize:'18px', lineHeight:1 }}>{value>=0?'▲':'▼'}</span>;
+}
+function TabBar({ tabs, active, onSelect, style={} }) {
+  return <div style={{ display:'flex', borderBottom:`3px solid ${BRAND.charcoal}`, ...style }}>{tabs.map(t=><button key={t} onClick={()=>onSelect(t)} style={{ fontFamily:"'Press Start 2P',monospace", fontSize:'9px', padding:'10px 14px', border:'none', borderRight:`2px solid ${BRAND.charcoal}`, borderBottom:active===t?`3px solid ${BRAND.yellow}`:'3px solid transparent', background:active===t?BRAND.pageBed:BRAND.white, color:active===t?BRAND.blue:BRAND.charcoal, cursor:'pointer', letterSpacing:'0.04em', marginBottom:'-3px' }}>{t}</button>)}</div>;
+}
+
+// ─── SIDEBAR ─────────────────────────────────────────────────────────────────
+const NAV_ITEMS = [
+  { id:'dashboard', label:'Dashboard', icon:'◈', badge:null },
+  { id:'customers', label:'Customers', icon:'◉', badge:3 },
+  { id:'revenue',   label:'Revenue',   icon:'◆', badge:5 },
+  { id:'reference', label:'Rate Cards',icon:'⊞', badge:null },
+  { id:'platform',  label:'Platform',  icon:'⊙', badge:1 },
+  { id:'audit',     label:'Audit Log', icon:'≡', badge:null },
+  { id:'security',  label:'Security',  icon:'⊕', badge:2 },
+  { id:'tickets',   label:'Tickets',   icon:'✉', badge:4 },
+];
+function Sidebar({ active, onNavigate, collapsed }) {
+  return (
+    <aside style={{ width:collapsed?'60px':'220px', minHeight:'100vh', background:BRAND.charcoal, display:'flex', flexDirection:'column', borderRight:`3px solid ${BRAND.charcoal}`, transition:'width 0.18s', flexShrink:0, zIndex:10 }}>
+      <div style={{ padding:collapsed?'16px 10px':'20px 18px', borderBottom:'3px solid rgba(255,255,255,0.12)', display:'flex', alignItems:'center', gap:'10px', minHeight:'72px' }}>
+        <div style={{ width:'32px', height:'32px', flexShrink:0, background:BRAND.blue, border:`2px solid ${BRAND.yellow}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'18px', boxShadow:`2px 2px 0 ${BRAND.yellow}` }}>🐄</div>
+        {!collapsed && <div><div style={{ fontFamily:"'Black Han Sans',sans-serif", fontSize:'13px', color:BRAND.white, textTransform:'uppercase', lineHeight:1.1 }}>SHIPPING<br/>COW</div><span style={{ fontFamily:"'Press Start 2P',monospace", fontSize:'7px', color:BRAND.yellow }}>// ADMIN</span></div>}
+      </div>
+      <nav style={{ flex:1, padding:'12px 0' }}>
+        {NAV_ITEMS.map(item => {
+          const isActive = active === item.id;
+          return (
+            <button key={item.id} onClick={()=>onNavigate(item.id)} title={collapsed?item.label:undefined}
+              style={{ width:'100%', display:'flex', alignItems:'center', gap:'10px', padding:collapsed?'12px 0':'11px 18px', justifyContent:collapsed?'center':'flex-start', background:isActive?BRAND.blue:'transparent', border:'none', borderLeft:isActive?`3px solid ${BRAND.yellow}`:'3px solid transparent', cursor:'pointer', position:'relative' }}
+              onMouseEnter={e=>{if(!isActive)e.currentTarget.style.background='rgba(255,255,255,0.07)';}}
+              onMouseLeave={e=>{if(!isActive)e.currentTarget.style.background='transparent';}}>
+              <span style={{ fontSize:'16px', color:isActive?BRAND.yellow:BRAND.sky, lineHeight:1, flexShrink:0 }}>{item.icon}</span>
+              {!collapsed && <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'13px', fontWeight:isActive?'700':'500', color:isActive?BRAND.white:'rgba(255,255,255,0.75)', flex:1, textAlign:'left' }}>{item.label}</span>}
+              {!collapsed && item.badge && <span style={{ fontFamily:"'Press Start 2P',monospace", fontSize:'8px', background:BRAND.red, color:BRAND.white, padding:'2px 5px', border:`2px solid ${BRAND.charcoal}`, minWidth:'20px', textAlign:'center' }}>{item.badge}</span>}
+              {collapsed && item.badge && <span style={{ position:'absolute', top:'6px', right:'6px', width:'8px', height:'8px', background:BRAND.red, border:`1px solid ${BRAND.charcoal}` }}></span>}
+            </button>
+          );
+        })}
+      </nav>
+      <div style={{ padding:collapsed?'12px 8px':'14px 16px', borderTop:'3px solid rgba(255,255,255,0.12)' }}>
+        {!collapsed ? (
+          <div>
+            <div style={{ fontFamily:"'Press Start 2P',monospace", fontSize:'7px', color:BRAND.sky, marginBottom:'4px' }}>// SUPER-ADMIN</div>
+            <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'12px', color:'rgba(255,255,255,0.8)', marginBottom:'10px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>founder@shippingcow.com</div>
+            <button style={{ width:'100%', fontFamily:"'Press Start 2P',monospace", fontSize:'8px', padding:'7px', background:'transparent', border:'2px solid rgba(255,255,255,0.25)', color:'rgba(255,255,255,0.6)', cursor:'pointer' }}>SIGN OUT</button>
+          </div>
+        ) : (
+          <div style={{ width:'32px', height:'32px', background:BRAND.blue, border:`2px solid ${BRAND.sky}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'14px', color:BRAND.white, margin:'0 auto' }}>F</div>
+        )}
+      </div>
+    </aside>
+  );
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────────────────────────
+function DashboardSection() {
+  const [mrrPeriod, setMrrPeriod] = React.useState('12mo');
+  const kpis = [
+    { label:'MRR', value:'$84,200', trend:12.4, sub:'vs last month' },
+    { label:'ACTIVE ORGS', value:'1,247', trend:8.1, sub:'30d growth' },
+    { label:'NEW SIGNUPS (30D)', value:'143', trend:-2.3, sub:'vs prior 30d' },
+    { label:'CALF→COW (30D)', value:'18.4%', trend:3.1, sub:'conversion' },
+    { label:'CHURN RISK', value:'37', trend:-5.0, sub:'0 uploads / 30d' },
+    { label:'FAILED PAYMENTS', value:'12', trend:4.2, sub:'needs action' },
+  ];
+  const mrrData = [
+    {month:'Jun',new:8200,expansion:3100,churned:1200},{month:'Jul',new:9400,expansion:3800,churned:1500},
+    {month:'Aug',new:10100,expansion:4200,churned:1400},{month:'Sep',new:11200,expansion:4800,churned:1800},
+    {month:'Oct',new:12400,expansion:5200,churned:2100},{month:'Nov',new:13800,expansion:5900,churned:2300},
+    {month:'Dec',new:15200,expansion:6400,churned:2600},{month:'Jan',new:16100,expansion:7100,churned:2800},
+    {month:'Feb',new:17400,expansion:7600,churned:3100},{month:'Mar',new:18900,expansion:8200,churned:3400},
+    {month:'Apr',new:20200,expansion:8900,churned:3700},{month:'May',new:21800,expansion:9400,churned:4000},
+  ];
+  const alerts = [
+    {type:'New Bull onboarding request',org:'Titan Outdoor Gear',severity:'critical',time:'2m ago'},
+    {type:'Payment failure',org:'BluePeak Supplies',severity:'critical',time:'14m ago'},
+    {type:'AM assignment SLA breach',org:'HeavyLift Co.',severity:'critical',time:'1h ago'},
+    {type:'Payment failure, 2nd retry',org:'KitchenPro Direct',severity:'high',time:'2h ago'},
+    {type:'Churn risk',org:'Coastal Freight',severity:'high',time:'4h ago'},
+    {type:'Org health score drop',org:'RedRock Wholesale',severity:'high',time:'6h ago'},
+    {type:'AI cost spike',org:'Summit Outdoors',severity:'medium',time:'8h ago'},
+    {type:'Suspended, no resolution',org:'LakeView Goods',severity:'medium',time:'3d ago'},
+  ];
+  const health = [
+    {label:'MOOOVY API',value:'99.2%',sub:'p50: 380ms · p95: 920ms',status:'ok'},
+    {label:'AI SPEND TODAY',value:'$42.80',sub:'61% of $70 daily budget',status:'ok'},
+    {label:'EDGE FN ERRORS',value:'3 errors',sub:'0.04% rate / last 1h',status:'warn'},
+    {label:'STRIPE WEBHOOKS',value:'Healthy',sub:'1,284 delivered / 24h',status:'ok'},
+  ];
+  const periods = {'3mo':3,'6mo':6,'12mo':12};
+  const vis = mrrData.slice(-periods[mrrPeriod]);
+  const maxV = Math.max(...mrrData.map(d=>d.new+d.expansion));
+  const W=480,H=120;
+  const pts = (data,key) => data.map((d,i)=>`${(i/(data.length-1))*(W-40)+20},${H-20-(d[key]/maxV)*(H-30)}`).join(' ');
+  return (
+    <div style={{padding:'28px',background:BRAND.pageBed,minHeight:'100%'}}>
+      <div style={{marginBottom:'24px'}}><Eyebrow>// 01 — COMMAND DASHBOARD</Eyebrow><h1 style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'32px',color:BRAND.charcoal,textTransform:'uppercase',lineHeight:1}}>Platform Overview</h1></div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(6,1fr)',gap:'12px',marginBottom:'24px'}}>
+        {kpis.map((k,i)=><Card key={i} style={{padding:'16px 14px'}}><Eyebrow style={{fontSize:'8px',marginBottom:'8px',color:'#6B7280'}}>{k.label}</Eyebrow><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'24px',fontWeight:'700',color:BRAND.charcoal,lineHeight:1.1}}>{k.value}</div><div style={{display:'flex',alignItems:'center',gap:'4px',marginTop:'6px'}}><TrendArrow value={k.trend}/><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'11px',color:'#6B7280'}}>{k.sub}</span></div></Card>)}
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 360px',gap:'16px',marginBottom:'16px'}}>
+        <Card style={{padding:'20px'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'16px'}}>
+            <div><Eyebrow>// MRR TREND</Eyebrow><div style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'18px',color:BRAND.charcoal,textTransform:'uppercase'}}>Revenue Chart</div></div>
+            <div style={{display:'flex',gap:'4px'}}>{['3mo','6mo','12mo'].map(p=><button key={p} onClick={()=>setMrrPeriod(p)} style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',padding:'5px 8px',background:mrrPeriod===p?BRAND.blue:BRAND.white,color:mrrPeriod===p?BRAND.white:BRAND.charcoal,border:`2px solid ${BRAND.charcoal}`,cursor:'pointer'}}>{p}</button>)}</div>
+          </div>
+          <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{overflow:'visible'}}>
+            {[0.25,0.5,0.75,1].map(f=><line key={f} x1="20" y1={H-20-f*(H-30)} x2={W-20} y2={H-20-f*(H-30)} stroke="#e5e7eb" strokeWidth="1" strokeDasharray="3,3"/>)}
+            <polyline points={pts(vis,'new')} fill="none" stroke={BRAND.green} strokeWidth="2.5"/>
+            <polyline points={pts(vis,'expansion')} fill="none" stroke={BRAND.teal} strokeWidth="2.5"/>
+            <polyline points={pts(vis,'churned')} fill="none" stroke={BRAND.red} strokeWidth="2.5"/>
+            {vis.map((d,i)=><text key={i} x={(i/(vis.length-1))*(W-40)+20} y={H-4} textAnchor="middle" fontSize="9" fontFamily="'Press Start 2P',monospace" fill="#9CA3AF">{d.month}</text>)}
+          </svg>
+          <div style={{display:'flex',gap:'16px',marginTop:'8px'}}>
+            {[['New MRR',BRAND.green],['Expansion',BRAND.teal],['Churned',BRAND.red]].map(([l,c])=><div key={l} style={{display:'flex',alignItems:'center',gap:'6px'}}><div style={{width:'16px',height:'3px',background:c}}></div><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:'#6B7280'}}>{l}</span></div>)}
+          </div>
+        </Card>
+        <Card style={{padding:'0',overflow:'hidden'}}>
+          <div style={{padding:'16px',borderBottom:`3px solid ${BRAND.charcoal}`,background:BRAND.charcoal}}>
+            <Eyebrow style={{color:BRAND.sky}}>// ALERT QUEUE</Eyebrow>
+            <div style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'16px',color:BRAND.white,textTransform:'uppercase'}}>{alerts.length} Active Alerts</div>
+          </div>
+          <div style={{overflow:'auto',maxHeight:'340px'}}>
+            {alerts.map((a,i)=><div key={i} style={{padding:'10px 14px',borderBottom:`2px solid ${BRAND.pageBed}`,display:'flex',flexDirection:'column',gap:'4px',background:i%2===0?BRAND.white:BRAND.pageBed,cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background=BRAND.sky+'44'} onMouseLeave={e=>e.currentTarget.style.background=i%2===0?BRAND.white:BRAND.pageBed}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}><SeverityBadge level={a.severity}/><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:'#9CA3AF'}}>{a.time}</span></div>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'600',color:BRAND.charcoal}}>{a.type}</div>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'12px',color:'#6B7280'}}>{a.org}</div>
+            </div>)}
+          </div>
+        </Card>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'12px'}}>
+        {health.map((t,i)=><Card key={i} style={{padding:'16px',borderLeft:`4px solid ${t.status==='ok'?BRAND.green:BRAND.amber}`}}>
+          <Eyebrow style={{fontSize:'8px',color:'#6B7280'}}>{t.label}</Eyebrow>
+          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'22px',fontWeight:'700',color:BRAND.charcoal,margin:'4px 0'}}>{t.value}</div>
+          <div style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:'#9CA3AF',lineHeight:1.6}}>{t.sub}</div>
+          <div style={{marginTop:'8px',width:'8px',height:'8px',background:t.status==='ok'?BRAND.green:BRAND.amber,border:`2px solid ${BRAND.charcoal}`}}></div>
+        </Card>)}
+      </div>
+    </div>
+  );
+}
+
+// ─── CUSTOMERS ───────────────────────────────────────────────────────────────
+const MOCK_ORGS = [
+  {id:'o1',name:'Titan Outdoor Gear',tier:'bull',mrr:3200,members:8,shipments:1420,lastActive:'2m ago',status:'active',zip:'94102',health:87},
+  {id:'o2',name:'BluePeak Supplies',tier:'cow',mrr:890,members:3,shipments:342,lastActive:'1h ago',status:'payment_failed',zip:'78201',health:54},
+  {id:'o3',name:'HeavyLift Co.',tier:'bull',mrr:2800,members:6,shipments:980,lastActive:'30m ago',status:'active',zip:'60601',health:91},
+  {id:'o4',name:'KitchenPro Direct',tier:'cow',mrr:490,members:2,shipments:188,lastActive:'3h ago',status:'payment_failed',zip:'30301',health:42},
+  {id:'o5',name:'Coastal Freight',tier:'cow',mrr:640,members:4,shipments:0,lastActive:'32d ago',status:'active',zip:'33101',health:28},
+  {id:'o6',name:'RedRock Wholesale',tier:'cow',mrr:710,members:3,shipments:290,lastActive:'5d ago',status:'active',zip:'85001',health:61},
+  {id:'o7',name:'Summit Outdoors',tier:'bull',mrr:1900,members:5,shipments:720,lastActive:'12h ago',status:'active',zip:'80201',health:79},
+  {id:'o8',name:'LakeView Goods',tier:'calf',mrr:0,members:1,shipments:0,lastActive:'14d ago',status:'suspended',zip:'55401',health:15},
+  {id:'o9',name:'Prairie Box Co.',tier:'calf',mrr:0,members:2,shipments:14,lastActive:'2d ago',status:'active',zip:'68501',health:40},
+  {id:'o10',name:'Ironworks Supply',tier:'cow',mrr:550,members:2,shipments:201,lastActive:'8h ago',status:'active',zip:'15201',health:73},
+  {id:'o11',name:'NorthStar Cargo',tier:'bull',mrr:2100,members:7,shipments:880,lastActive:'1h ago',status:'active',zip:'98101',health:84},
+  {id:'o12',name:'Desert Dispatch',tier:'calf',mrr:0,members:1,shipments:2,lastActive:'20d ago',status:'active',zip:'73101',health:22},
+];
+const MOCK_MEMBERS = [
+  {name:'Jordan Lee',email:'jordan@titanoutdoor.com',role:'owner',lastLogin:'2m ago',mfa:true},
+  {name:'Sam Rivera',email:'sam@titanoutdoor.com',role:'admin',lastLogin:'3h ago',mfa:true},
+  {name:'Alex Chen',email:'alex@titanoutdoor.com',role:'member',lastLogin:'1d ago',mfa:false},
+];
+const MOCK_ACTIVITY = [
+  {ts:'2026-05-01 14:22',user:'jordan@titanoutdoor.com',action:'Uploaded file',detail:'1,842 rows · shipments_apr.csv'},
+  {ts:'2026-05-01 14:18',user:'jordan@titanoutdoor.com',action:'Viewed Dashboard',detail:''},
+  {ts:'2026-05-01 11:03',user:'sam@titanoutdoor.com',action:'Asked Mooovy',detail:'"What are my top 5 zones by cost?"'},
+  {ts:'2026-04-30 17:44',user:'jordan@titanoutdoor.com',action:'Downloaded report',detail:'Monthly Summary · Apr 2026'},
+  {ts:'2026-04-30 09:12',user:'alex@titanoutdoor.com',action:'Logged in',detail:'IP 104.21.xx.xx · Chrome / macOS'},
+];
+
+function OrgDrawer({ org, onClose }) {
+  const [tab, setTab] = React.useState('OVERVIEW');
+  const [impOpen, setImpOpen] = React.useState(false);
+  const [notes, setNotes] = React.useState('First Bull onboarding call scheduled May 3. Prefers FedEx Ground. High volume Q4.');
+  return (
+    <div style={{position:'fixed',inset:0,zIndex:100,display:'flex',alignItems:'stretch',justifyContent:'flex-end'}}>
+      <div onClick={onClose} style={{flex:1,background:'rgba(26,32,44,0.5)'}}/>
+      <div style={{width:'720px',background:BRAND.pageBed,borderLeft:`4px solid ${BRAND.charcoal}`,display:'flex',flexDirection:'column',boxShadow:`-8px 0 0 ${BRAND.charcoal}`,overflow:'hidden'}}>
+        <div style={{background:BRAND.charcoal,padding:'20px 24px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:`3px solid ${BRAND.yellow}`}}>
+          <div><Eyebrow style={{color:BRAND.sky}}>// ORG DETAIL</Eyebrow><div style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'22px',color:BRAND.white,textTransform:'uppercase'}}>{org.name}</div><div style={{display:'flex',gap:'8px',marginTop:'6px'}}><Badge type="tier" value={org.tier}/><Badge type="status" value={org.status}/></div></div>
+          <button onClick={onClose} style={{background:'none',border:'2px solid rgba(255,255,255,0.3)',color:BRAND.white,fontSize:'18px',width:'36px',height:'36px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+        </div>
+        <TabBar tabs={['OVERVIEW','MEMBERS','ACTIVITY','BILLING','AUDIT']} active={tab} onSelect={setTab} style={{background:BRAND.white,borderBottom:`3px solid ${BRAND.charcoal}`}}/>
+        <div style={{flex:1,overflow:'auto',padding:'20px 24px'}}>
+          {tab==='OVERVIEW' && <div style={{display:'flex',flexDirection:'column',gap:'16px'}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'10px'}}>
+              {[{l:'MRR',v:`$${org.mrr.toLocaleString()}`},{l:'MEMBERS',v:org.members},{l:'SHIPMENTS (30D)',v:org.shipments.toLocaleString()},{l:'HEALTH SCORE',v:org.health+'/100'}].map(s=><Card key={s.l} style={{padding:'12px'}}><Eyebrow style={{fontSize:'8px',color:'#9CA3AF',marginBottom:'4px'}}>{s.l}</Eyebrow><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'20px',fontWeight:'700',color:BRAND.charcoal}}>{s.v}</div></Card>)}
+            </div>
+            <Card style={{padding:'16px'}}><Eyebrow style={{marginBottom:'12px'}}>// ORG INFO</Eyebrow><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px'}}>{[['Created','Jan 12, 2025'],['Origin ZIP',org.zip],['Platforms','Shopify, Amazon'],['Billing cycle','Monthly'],['Stripe ID','cus_Pq8xR2...'],['Last active',org.lastActive]].map(([k,v])=><div key={k} style={{display:'flex',gap:'8px',alignItems:'baseline'}}><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:'#9CA3AF',minWidth:'80px'}}>{k}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',color:BRAND.charcoal}}>{v}</span></div>)}</div></Card>
+            <Card style={{padding:'16px'}}><Eyebrow style={{marginBottom:'8px'}}>// INTERNAL NOTES</Eyebrow><textarea value={notes} onChange={e=>setNotes(e.target.value)} style={{width:'100%',minHeight:'80px',fontFamily:"'DM Sans',sans-serif",fontSize:'13px',border:`2px solid ${BRAND.charcoal}`,padding:'8px',background:BRAND.pageBed,resize:'vertical',color:BRAND.charcoal,outline:'none',boxSizing:'border-box'}}/><div style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:'#9CA3AF',marginTop:'4px'}}>// AUTO-SAVED · VISIBLE TO ALL ADMINS</div></Card>
+            <div><Eyebrow style={{marginBottom:'10px'}}>// QUICK ACTIONS</Eyebrow><div style={{display:'flex',flexWrap:'wrap',gap:'8px'}}><Btn variant="blue" size="sm" onClick={()=>setImpOpen(true)}>Impersonate Owner</Btn><Btn variant="ghost" size="sm">Suspend Org</Btn><Btn variant="ghost" size="sm">Override Tier</Btn><Btn variant="ghost" size="sm">Force Logout All</Btn><Btn variant="danger" size="sm">CCPA Erasure</Btn></div></div>
+          </div>}
+          {tab==='MEMBERS' && <div><Eyebrow style={{marginBottom:'12px'}}>// ORG MEMBERS</Eyebrow><div style={{border:`3px solid ${BRAND.charcoal}`,background:BRAND.white}}><div style={{display:'grid',gridTemplateColumns:'1fr 1.5fr 80px 80px 60px 120px',padding:'8px 14px',background:BRAND.charcoal}}>{['NAME','EMAIL','ROLE','LAST LOGIN','MFA','ACTIONS'].map(h=><span key={h} style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.sky}}>{h}</span>)}</div>{MOCK_MEMBERS.map((m,i)=><div key={i} style={{display:'grid',gridTemplateColumns:'1fr 1.5fr 80px 80px 60px 120px',padding:'12px 14px',borderBottom:`1px solid ${BRAND.pageBed}`,alignItems:'center'}}><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'600'}}>{m.name}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'12px',color:'#6B7280'}}>{m.email}</span><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:m.role==='owner'?BRAND.blue:BRAND.charcoal}}>{m.role.toUpperCase()}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'12px',color:'#6B7280'}}>{m.lastLogin}</span><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:m.mfa?BRAND.green:BRAND.red}}>{m.mfa?'ON':'OFF'}</span><Btn variant="ghost" size="sm" style={{fontSize:'8px',padding:'4px 6px'}}>Impersonate</Btn></div>)}</div></div>}
+          {tab==='ACTIVITY' && <div><Eyebrow style={{marginBottom:'12px'}}>// ACTIVITY LOG</Eyebrow><div style={{border:`3px solid ${BRAND.charcoal}`,background:BRAND.white}}><div style={{display:'grid',gridTemplateColumns:'140px 1fr 140px 1fr',padding:'8px 14px',background:BRAND.charcoal}}>{['TIMESTAMP','USER','ACTION','DETAIL'].map(h=><span key={h} style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.sky}}>{h}</span>)}</div>{MOCK_ACTIVITY.map((a,i)=><div key={i} style={{display:'grid',gridTemplateColumns:'140px 1fr 140px 1fr',padding:'10px 14px',borderBottom:`1px solid ${BRAND.pageBed}`,alignItems:'center',background:i%2===0?BRAND.white:BRAND.pageBed}}><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:'#9CA3AF',lineHeight:1.6}}>{a.ts}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'12px',color:'#6B7280'}}>{a.user}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'600'}}>{a.action}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'12px',color:'#6B7280'}}>{a.detail}</span></div>)}</div></div>}
+          {tab==='BILLING' && <div style={{display:'flex',flexDirection:'column',gap:'16px'}}>
+            <Eyebrow>// BILLING & PAYMENTS</Eyebrow>
+            <Card style={{padding:'16px'}}><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px'}}>{[['Plan','Bull — $3,200/mo'],['Status',org.status==='payment_failed'?'⚠ PAYMENT FAILED':'Active'],['Next renewal','Jun 1, 2026'],['Stripe ID','cus_Pq8xR2Ab9dKL'],['Payment method','Visa ···· 4242 exp 09/27'],['Active coupons','None']].map(([k,v])=><div key={k}><Eyebrow style={{fontSize:'8px',color:'#9CA3AF',marginBottom:'2px'}}>{k}</Eyebrow><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'14px',fontWeight:'600',color:org.status==='payment_failed'&&k==='Status'?BRAND.red:BRAND.charcoal}}>{v}</span></div>)}</div></Card>
+            <Card style={{padding:'16px'}}><Eyebrow style={{marginBottom:'10px'}}>// INVOICE HISTORY</Eyebrow>{[{date:'May 1, 2026',amount:'$3,200',status:'failed'},{date:'Apr 1, 2026',amount:'$3,200',status:'paid'},{date:'Mar 1, 2026',amount:'$3,200',status:'paid'}].map((inv,i)=><div key={i} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 0',borderBottom:`1px solid ${BRAND.pageBed}`}}><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px'}}>{inv.date}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'700'}}>{inv.amount}</span><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:inv.status==='paid'?BRAND.green:BRAND.red}}>{inv.status.toUpperCase()}</span><Btn variant="ghost" size="sm" style={{fontSize:'8px',padding:'4px 7px'}}>PDF</Btn></div>)}</Card>
+            <div style={{display:'flex',gap:'8px'}}><Btn variant="primary" size="sm">Retry Payment</Btn><Btn variant="ghost" size="sm">Apply Coupon</Btn><Btn variant="ghost" size="sm">Pause Sub</Btn><Btn variant="danger" size="sm">Cancel Sub</Btn></div>
+          </div>}
+          {tab==='AUDIT' && <div><Eyebrow style={{marginBottom:'12px'}}>// ADMIN ACTIONS ON THIS ORG</Eyebrow><div style={{border:`3px solid ${BRAND.charcoal}`,background:BRAND.white}}><div style={{display:'grid',gridTemplateColumns:'140px 120px 1fr 1fr',padding:'8px 14px',background:BRAND.charcoal}}>{['TIMESTAMP','ADMIN','ACTION','DETAIL'].map(h=><span key={h} style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.sky}}>{h}</span>)}</div>{[{ts:'2026-05-01 10:14',admin:'founder@',action:'IMPERSONATE_USER',detail:'Target: jordan@titanoutdoor.com'},{ts:'2026-04-15 09:32',admin:'founder@',action:'TIER_OVERRIDE',detail:'Cow → Bull (trial 30d)'},{ts:'2026-03-01 14:01',admin:'founder@',action:'COUPON_APPLIED',detail:'BULL20 — 20% off, 3mo'}].map((a,i)=><div key={i} style={{display:'grid',gridTemplateColumns:'140px 120px 1fr 1fr',padding:'10px 14px',borderBottom:`1px solid ${BRAND.pageBed}`,alignItems:'center',background:i%2===0?BRAND.white:BRAND.pageBed}}><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:'#9CA3AF',lineHeight:1.6}}>{a.ts}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'12px',color:'#6B7280'}}>{a.admin}</span><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.blue}}>{a.action}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'12px',color:'#6B7280'}}>{a.detail}</span></div>)}</div></div>}
+        </div>
+      </div>
+      {impOpen && <div style={{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(26,32,44,0.7)'}}>
+        <Card style={{width:'480px',padding:'28px',background:BRAND.white}}>
+          <Eyebrow>// IMPERSONATION</Eyebrow>
+          <div style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'20px',color:BRAND.charcoal,textTransform:'uppercase',margin:'8px 0 16px'}}>Start Admin Session</div>
+          <div style={{background:'#FEF3C7',border:`3px solid ${BRAND.amber}`,padding:'12px',marginBottom:'16px',fontFamily:"'DM Sans',sans-serif",fontSize:'13px'}}>⚠ You will be logged in as <strong>jordan@titanoutdoor.com</strong> in a new tab. This session lasts 60 minutes max. The action is being recorded.</div>
+          <div style={{marginBottom:'12px'}}><Eyebrow style={{marginBottom:'6px'}}>// REASON (REQUIRED)</Eyebrow><select style={{width:'100%',fontFamily:"'DM Sans',sans-serif",fontSize:'13px',padding:'8px',border:`3px solid ${BRAND.charcoal}`}}><option>Support ticket</option><option>Bug investigation</option><option>Account setup assistance</option><option>Sales demo</option><option>Other</option></select></div>
+          <div style={{display:'flex',gap:'8px',justifyContent:'flex-end',marginTop:'16px'}}><Btn variant="ghost" onClick={()=>setImpOpen(false)}>Cancel</Btn><Btn variant="blue" onClick={()=>setImpOpen(false)}>Start Session →</Btn></div>
+        </Card>
+      </div>}
+    </div>
+  );
+}
+
+function CustomersSection() {
+  const [search, setSearch] = React.useState('');
+  const [tierF, setTierF] = React.useState('all');
+  const [statusF, setStatusF] = React.useState('all');
+  const [selOrg, setSelOrg] = React.useState(null);
+  const [sortCol, setSortCol] = React.useState('mrr');
+  const [sortDir, setSortDir] = React.useState(-1);
+  const filtered = MOCK_ORGS.filter(o=>{
+    const ms=!search||o.name.toLowerCase().includes(search.toLowerCase())||o.zip.includes(search);
+    return ms&&(tierF==='all'||o.tier===tierF)&&(statusF==='all'||o.status===statusF);
+  }).sort((a,b)=>sortDir*(a[sortCol]>b[sortCol]?1:-1));
+  const cols=[{key:'name',label:'ORG NAME',flex:2},{key:'tier',label:'TIER',flex:0.6},{key:'mrr',label:'MRR',flex:0.8},{key:'members',label:'MEMBERS',flex:0.6},{key:'shipments',label:'SHIPMENTS (30D)',flex:1},{key:'lastActive',label:'LAST ACTIVE',flex:0.8},{key:'status',label:'STATUS',flex:0.8},{key:'_a',label:'ACTIONS',flex:1.2}];
+  return (
+    <div style={{padding:'28px',background:BRAND.pageBed,minHeight:'100%'}}>
+      <div style={{marginBottom:'20px'}}><Eyebrow>// 02 — CUSTOMERS</Eyebrow><h1 style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'32px',color:BRAND.charcoal,textTransform:'uppercase',lineHeight:1}}>Orgs & Users</h1></div>
+      <Card style={{padding:'14px 16px',marginBottom:'16px',background:BRAND.white}}>
+        <div style={{display:'flex',gap:'12px',alignItems:'center',flexWrap:'wrap'}}>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search org name, email, ZIP..." style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',padding:'8px 12px',border:`3px solid ${BRAND.charcoal}`,flex:'1 1 200px',outline:'none'}}/>
+          <div style={{display:'flex',gap:'4px',alignItems:'center'}}><Eyebrow style={{marginBottom:0,marginRight:'6px'}}>TIER:</Eyebrow>{['all','calf','cow','bull'].map(t=><button key={t} onClick={()=>setTierF(t)} style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',padding:'6px 10px',background:tierF===t?BRAND.charcoal:BRAND.white,color:tierF===t?BRAND.yellow:BRAND.charcoal,border:`2px solid ${BRAND.charcoal}`,cursor:'pointer'}}>{t.toUpperCase()}</button>)}</div>
+          <div style={{display:'flex',gap:'4px',alignItems:'center'}}><Eyebrow style={{marginBottom:0,marginRight:'6px'}}>STATUS:</Eyebrow>{['all','active','suspended','payment_failed'].map(s=><button key={s} onClick={()=>setStatusF(s)} style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',padding:'6px 10px',background:statusF===s?BRAND.charcoal:BRAND.white,color:statusF===s?BRAND.yellow:BRAND.charcoal,border:`2px solid ${BRAND.charcoal}`,cursor:'pointer'}}>{s.replace('_',' ').toUpperCase()}</button>)}</div>
+          <div style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:'#9CA3AF',marginLeft:'auto'}}>{filtered.length} ORGS</div>
+        </div>
+      </Card>
+      <div style={{border:`3px solid ${BRAND.charcoal}`,boxShadow:px(),background:BRAND.white}}>
+        <div style={{display:'flex',padding:'10px 14px',background:BRAND.charcoal}}>
+          {cols.map(c=><div key={c.key} style={{flex:c.flex,fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.sky,cursor:c.key!=='_a'?'pointer':'default'}} onClick={()=>{if(c.key!=='_a'){setSortCol(c.key);setSortDir(sortCol===c.key?-sortDir:-1);}}}>{c.label}{sortCol===c.key&&(sortDir===-1?' ↓':' ↑')}</div>)}
+        </div>
+        {filtered.map((org,i)=><div key={org.id} style={{display:'flex',padding:'12px 14px',borderBottom:`1px solid ${BRAND.pageBed}`,alignItems:'center',background:i%2===0?BRAND.white:BRAND.pageBed,cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background=BRAND.sky+'33'} onMouseLeave={e=>e.currentTarget.style.background=i%2===0?BRAND.white:BRAND.pageBed}>
+          <div style={{flex:2}}><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'14px',fontWeight:'700',color:BRAND.charcoal}}>{org.name}</div><div style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:'#9CA3AF'}}>ZIP {org.zip}</div></div>
+          <div style={{flex:0.6}}><Badge type="tier" value={org.tier}/></div>
+          <div style={{flex:0.8,fontFamily:"'DM Sans',sans-serif",fontSize:'14px',fontWeight:'700'}}>{org.mrr>0?'$'+org.mrr.toLocaleString():'—'}</div>
+          <div style={{flex:0.6,fontFamily:"'DM Sans',sans-serif",fontSize:'13px'}}>{org.members}</div>
+          <div style={{flex:1,fontFamily:"'DM Sans',sans-serif",fontSize:'13px',color:org.shipments===0?BRAND.red:BRAND.charcoal}}>{org.shipments.toLocaleString()}</div>
+          <div style={{flex:0.8,fontFamily:"'DM Sans',sans-serif",fontSize:'12px',color:'#6B7280'}}>{org.lastActive}</div>
+          <div style={{flex:0.8}}><Badge type="status" value={org.status}/></div>
+          <div style={{flex:1.2,display:'flex',gap:'4px'}}><Btn variant="blue" size="sm" onClick={()=>setSelOrg(org)}>View</Btn><Btn variant="ghost" size="sm">Suspend</Btn></div>
+        </div>)}
+      </div>
+      {selOrg && <OrgDrawer org={selOrg} onClose={()=>setSelOrg(null)}/>}
+    </div>
+  );
+}
+
+// ─── REVENUE ─────────────────────────────────────────────────────────────────
+const FAILED_PMT = [
+  {org:'BluePeak Supplies',tier:'cow',amount:890,reason:'Insufficient funds',retries:2,last:'2h ago'},
+  {org:'KitchenPro Direct',tier:'cow',amount:490,reason:'Card expired',retries:1,last:'4h ago'},
+  {org:'Desert Dispatch',tier:'calf',amount:49,reason:'Card declined',retries:3,last:'3d ago'},
+  {org:'VaultPack LLC',tier:'cow',amount:640,reason:'Do not honor',retries:0,last:'30m ago'},
+  {org:'GrainBelt Freight',tier:'bull',amount:1800,reason:'Insufficient funds',retries:2,last:'1d ago'},
+];
+function RevenueSection() {
+  const [period, setPeriod] = React.useState('30d');
+  const metrics=[{label:'NEW MRR',value:'$21,800',trend:'+12.4%',color:BRAND.green},{label:'EXPANSION MRR',value:'$9,400',trend:'+8.1%',color:BRAND.teal},{label:'CHURNED MRR',value:'-$4,000',trend:'+3.2%',color:BRAND.red},{label:'NET MRR CHANGE',value:'+$27,200',trend:'+9.8%',color:BRAND.blue},{label:'ARR',value:'$1.01M',trend:'+11.2%',color:BRAND.blue},{label:'CALF→COW CONV.',value:'18.4%',trend:'+3.1%',color:BRAND.green}];
+  const funnel=[{stage:'Calf Signups',count:143,pct:100},{stage:'First Upload',count:98,pct:68.5},{stage:'Upgraded to Cow',count:26,pct:18.2}];
+  return (
+    <div style={{padding:'28px',background:BRAND.pageBed,minHeight:'100%'}}>
+      <div style={{marginBottom:'20px'}}><Eyebrow>// 03 — REVENUE & BILLING</Eyebrow><h1 style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'32px',color:BRAND.charcoal,textTransform:'uppercase',lineHeight:1}}>Revenue Overview</h1></div>
+      <div style={{display:'flex',gap:'4px',marginBottom:'20px'}}>{['30d','90d','12mo'].map(p=><button key={p} onClick={()=>setPeriod(p)} style={{fontFamily:"'Press Start 2P',monospace",fontSize:'9px',padding:'7px 14px',background:period===p?BRAND.charcoal:BRAND.white,color:period===p?BRAND.yellow:BRAND.charcoal,border:`3px solid ${BRAND.charcoal}`,cursor:'pointer'}}>{p}</button>)}</div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(6,1fr)',gap:'10px',marginBottom:'20px'}}>
+        {metrics.map((m,i)=><Card key={i} style={{padding:'14px',borderTop:`4px solid ${m.color}`}}><Eyebrow style={{fontSize:'8px',color:'#9CA3AF',marginBottom:'6px'}}>{m.label}</Eyebrow><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'18px',fontWeight:'700',color:m.color}}>{m.value}</div><div style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:'#9CA3AF',marginTop:'4px'}}>{m.trend}</div></Card>)}
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'300px 1fr',gap:'16px',marginBottom:'20px'}}>
+        <Card style={{padding:'20px'}}><Eyebrow style={{marginBottom:'12px'}}>// CONVERSION FUNNEL</Eyebrow>{funnel.map((f,i)=><div key={i} style={{marginBottom:'10px'}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:'4px'}}><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'600'}}>{f.stage}</span><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'9px',color:BRAND.blue}}>{f.count}</span></div><div style={{height:'28px',background:BRAND.pageBed,border:`2px solid ${BRAND.charcoal}`,position:'relative'}}><div style={{height:'100%',width:`${f.pct}%`,background:i===0?BRAND.charcoal:i===1?BRAND.blue:BRAND.yellow}}/><span style={{position:'absolute',right:'6px',top:'50%',transform:'translateY(-50%)',fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:'#9CA3AF'}}>{f.pct}%</span></div></div>)}</Card>
+        <Card style={{padding:'0',overflow:'hidden'}}>
+          <div style={{padding:'14px 16px',background:BRAND.charcoal,borderBottom:`3px solid ${BRAND.red}`}}><Eyebrow style={{color:BRAND.sky}}>// FAILED PAYMENT QUEUE</Eyebrow><div style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'16px',color:BRAND.white,textTransform:'uppercase'}}>{FAILED_PMT.length} Orgs Need Attention</div></div>
+          <div style={{display:'grid',gridTemplateColumns:'1.5fr 0.6fr 0.8fr 1.2fr 0.5fr 0.7fr 1.4fr',padding:'8px 14px',background:'#f9fafb',borderBottom:`2px solid ${BRAND.charcoal}`}}>{['ORG','TIER','AMOUNT','REASON','TRIES','LAST','ACTIONS'].map(h=><span key={h} style={{fontFamily:"'Press Start 2P',monospace",fontSize:'7px',color:'#9CA3AF'}}>{h}</span>)}</div>
+          {FAILED_PMT.map((fp,i)=><div key={i} style={{display:'grid',gridTemplateColumns:'1.5fr 0.6fr 0.8fr 1.2fr 0.5fr 0.7fr 1.4fr',padding:'10px 14px',borderBottom:`1px solid ${BRAND.pageBed}`,alignItems:'center'}}><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'700'}}>{fp.org}</span><Badge type="tier" value={fp.tier}/><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'700',color:BRAND.red}}>${fp.amount}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'12px',color:'#6B7280'}}>{fp.reason}</span><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'9px',color:fp.retries>=2?BRAND.red:BRAND.amber}}>{fp.retries}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'12px',color:'#9CA3AF'}}>{fp.last}</span><div style={{display:'flex',gap:'3px'}}><Btn variant="primary" size="sm" style={{fontSize:'7px',padding:'4px 5px'}}>Retry</Btn><Btn variant="ghost" size="sm" style={{fontSize:'7px',padding:'4px 5px'}}>Extend</Btn><Btn variant="danger" size="sm" style={{fontSize:'7px',padding:'4px 5px'}}>Suspend</Btn></div></div>)}
+        </Card>
+      </div>
+      <Card style={{padding:'20px'}}><Eyebrow style={{marginBottom:'14px'}}>// DUNNING FLOW</Eyebrow><div style={{display:'flex',position:'relative'}}>{[{day:'DAY 0',state:'Failed',color:BRAND.red},{day:'DAY +3',state:'Retry 1',color:BRAND.amber},{day:'DAY +8',state:'Retry 2',color:BRAND.amber},{day:'DAY +15',state:'Grace',color:BRAND.blue},{day:'DAY +22',state:'Suspended',color:'#9CA3AF'},{day:'DAY +52',state:'Deactivated',color:BRAND.charcoal}].map((s,i,arr)=><div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',position:'relative'}}>{i<arr.length-1&&<div style={{position:'absolute',top:'14px',left:'50%',width:'100%',height:'3px',background:BRAND.charcoal,zIndex:0}}/>}<div style={{width:'28px',height:'28px',background:s.color,border:`3px solid ${BRAND.charcoal}`,zIndex:1,position:'relative',boxShadow:'2px 2px 0 #1A202C'}}/><div style={{fontFamily:"'Press Start 2P',monospace",fontSize:'7px',color:BRAND.blue,marginTop:'6px',textAlign:'center'}}>{s.day}</div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'12px',fontWeight:'700',textAlign:'center'}}>{s.state}</div></div>)}</div></Card>
+    </div>
+  );
+}
+
+// ─── REFERENCE DATA ───────────────────────────────────────────────────────────
+const REF_TABLES = [
+  {key:'zone_matrix',label:'Zone Matrix',rows:42180,updated:'Jan 15, 2026',status:'live'},
+  {key:'our_carrier_rates',label:'Our Carrier Rates',rows:1240,updated:'Apr 1, 2026',status:'draft'},
+  {key:'carrier_retail_rates',label:'Carrier Retail Rates',rows:1480,updated:'Apr 1, 2026',status:'live'},
+  {key:'our_warehousing_fees',label:'Warehousing Fees',rows:24,updated:'Feb 20, 2026',status:'live'},
+  {key:'our_logistics_fees',label:'Logistics Fees',rows:18,updated:'Feb 20, 2026',status:'live'},
+  {key:'category_benchmarks',label:'Category Benchmarks',rows:96,updated:'Mar 1, 2026',status:'live'},
+];
+const RATE_ROWS = [
+  {carrier:'FedEx Ground',service:'Ground',zone:2,weight:'1–5 lb',rate:8.42},
+  {carrier:'FedEx Ground',service:'Ground',zone:3,weight:'1–5 lb',rate:9.18},
+  {carrier:'FedEx Ground',service:'Ground',zone:4,weight:'1–5 lb',rate:10.54},
+  {carrier:'UPS Ground',service:'Ground',zone:2,weight:'1–5 lb',rate:8.61},
+  {carrier:'UPS Ground',service:'Ground',zone:3,weight:'1–5 lb',rate:9.34},
+  {carrier:'UPS Ground',service:'Ground',zone:4,weight:'1–5 lb',rate:10.72},
+  {carrier:'FedEx Ground',service:'Ground',zone:2,weight:'6–10 lb',rate:11.20},
+  {carrier:'FedEx Ground',service:'Ground',zone:3,weight:'6–10 lb',rate:12.88},
+];
+function EditorModal({ table, onClose }) {
+  const [step, setStep] = React.useState(1);
+  const [rows, setRows] = React.useState(RATE_ROWS.map(r=>({...r})));
+  const [note, setNote] = React.useState('');
+  const [validated, setValidated] = React.useState(false);
+  const [published, setPublished] = React.useState(false);
+  const steps=['EDIT','VALIDATE','PREVIEW IMPACT','PUBLISH'];
+  return (
+    <div style={{position:'fixed',inset:0,zIndex:100,background:'rgba(26,32,44,0.7)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <div style={{width:'900px',maxHeight:'90vh',background:BRAND.pageBed,border:`4px solid ${BRAND.charcoal}`,boxShadow:`8px 8px 0 ${BRAND.charcoal}`,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <div style={{padding:'18px 24px',background:BRAND.charcoal,display:'flex',alignItems:'center',justifyContent:'space-between'}}><div><Eyebrow style={{color:BRAND.sky}}>// REFERENCE DATA EDITOR</Eyebrow><div style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'18px',color:BRAND.white,textTransform:'uppercase'}}>{table.label}</div></div><button onClick={onClose} style={{background:'none',border:'2px solid rgba(255,255,255,0.3)',color:BRAND.white,fontSize:'18px',width:'36px',height:'36px',cursor:'pointer'}}>✕</button></div>
+        <div style={{display:'flex',background:BRAND.white,borderBottom:`3px solid ${BRAND.charcoal}`}}>{steps.map((s,i)=>{const n=i+1,isA=step===n,isDone=step>n;return(<div key={s} onClick={()=>setStep(n)} style={{display:'flex',alignItems:'center',gap:'8px',padding:'12px 20px',cursor:'pointer',flex:1,justifyContent:'center',borderBottom:isA?`3px solid ${BRAND.yellow}`:'3px solid transparent',background:isA?BRAND.pageBed:BRAND.white,marginBottom:'-3px'}}><span style={{width:'20px',height:'20px',background:isDone?BRAND.green:isA?BRAND.blue:'#e5e7eb',border:`2px solid ${BRAND.charcoal}`,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:isDone||isA?BRAND.white:BRAND.charcoal,flexShrink:0}}>{isDone?'✓':n}</span><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:isA?BRAND.blue:'#9CA3AF'}}>{s}</span></div>);})}</div>
+        <div style={{flex:1,overflow:'auto',padding:'20px 24px'}}>
+          {step===1&&<div><div style={{display:'flex',gap:'8px',marginBottom:'14px'}}><Btn variant="ghost" size="sm">Import CSV</Btn><Btn variant="ghost" size="sm">Discard Draft</Btn><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.amber,alignSelf:'center',marginLeft:'auto'}}>// UNSAVED DRAFT</span></div><div style={{border:`3px solid ${BRAND.charcoal}`,background:BRAND.white}}><div style={{display:'grid',gridTemplateColumns:'1.5fr 1fr 0.5fr 1fr 1fr',padding:'8px 12px',background:BRAND.charcoal}}>{['CARRIER','SERVICE','ZONE','WEIGHT BAND','RATE ($)'].map(h=><span key={h} style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.sky}}>{h}</span>)}</div>{rows.map((row,i)=><div key={i} style={{display:'grid',gridTemplateColumns:'1.5fr 1fr 0.5fr 1fr 1fr',padding:'8px 12px',borderBottom:`1px solid ${BRAND.pageBed}`,alignItems:'center',background:i%2===0?BRAND.white:BRAND.pageBed}}><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px'}}>{row.carrier}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px'}}>{row.service}</span><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'9px',color:BRAND.blue}}>{row.zone}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px'}}>{row.weight}</span><input value={row.rate} onChange={e=>{const nr=[...rows];nr[i]={...row,rate:e.target.value};setRows(nr);}} style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'700',padding:'4px 8px',border:`2px solid ${BRAND.charcoal}`,width:'80px',background:BRAND.pageBed,outline:'none'}}/></div>)}</div><div style={{marginTop:'16px',display:'flex',justifyContent:'flex-end'}}><Btn variant="blue" onClick={()=>setStep(2)}>Run Validation →</Btn></div></div>}
+          {step===2&&<div><div style={{background:BRAND.white,border:`3px solid ${BRAND.charcoal}`,padding:'24px',textAlign:'center',marginBottom:'16px'}}>{!validated?(<div><div style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'22px',color:BRAND.charcoal,textTransform:'uppercase',marginBottom:'16px'}}>Run Validation</div><Btn variant="blue" onClick={()=>setValidated(true)}>▶ Run Validation</Btn></div>):(<div><div style={{display:'flex',gap:'16px',justifyContent:'center',marginBottom:'20px'}}>{[{label:'ROWS CHECKED',val:rows.length,color:BRAND.charcoal},{label:'ERRORS',val:0,color:BRAND.green},{label:'WARNINGS',val:1,color:BRAND.amber}].map(s=><Card key={s.label} style={{padding:'16px 24px'}}><Eyebrow style={{fontSize:'8px',color:'#9CA3AF'}}>{s.label}</Eyebrow><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'32px',fontWeight:'700',color:s.color}}>{s.val}</div></Card>)}</div><div style={{background:'#FEF3C7',border:`3px solid ${BRAND.amber}`,padding:'12px',textAlign:'left'}}><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.amber}}>// WARNING</span><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',marginTop:'6px'}}>FedEx Ground Zone 4, 6–10 lb rate ($12.88) is 8% above prior version.</div></div></div>)}</div>{validated&&<div style={{display:'flex',justifyContent:'flex-end',gap:'8px'}}><Btn variant="ghost" onClick={()=>setStep(1)}>← Back</Btn><Btn variant="blue" onClick={()=>setStep(3)}>Preview Impact →</Btn></div>}</div>}
+          {step===3&&<div><Eyebrow style={{marginBottom:'10px'}}>// IMPACT PREVIEW — TOP 5 ORGS BY VOLUME</Eyebrow><div style={{border:`3px solid ${BRAND.charcoal}`,background:BRAND.white,marginBottom:'16px'}}><div style={{display:'grid',gridTemplateColumns:'2fr 1fr 1fr 1fr 0.8fr',padding:'8px 14px',background:BRAND.charcoal}}>{['ORG','CURR AVG/SHIP','NEW AVG/SHIP','DELTA $','DELTA %'].map(h=><span key={h} style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.sky}}>{h}</span>)}</div>{[['Titan Outdoor Gear','$14.22','$14.84','+$0.62','+4.4%'],['HeavyLift Co.','$12.80','$13.37','+$0.57','+4.5%'],['Summit Outdoors','$15.44','$16.10','+$0.66','+4.3%'],['NorthStar Cargo','$13.91','$14.52','+$0.61','+4.4%'],['Ironworks Supply','$11.20','$11.69','+$0.49','+4.4%']].map(([o,c,n,d,p],i)=><div key={i} style={{display:'grid',gridTemplateColumns:'2fr 1fr 1fr 1fr 0.8fr',padding:'10px 14px',borderBottom:`1px solid ${BRAND.pageBed}`,alignItems:'center',background:i%2===0?BRAND.white:BRAND.pageBed}}><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'700'}}>{o}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px'}}>{c}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px'}}>{n}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',color:BRAND.red,fontWeight:'700'}}>{d}</span><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'9px',color:BRAND.red}}>{p}</span></div>)}</div><div style={{display:'flex',justifyContent:'flex-end',gap:'8px'}}><Btn variant="ghost" onClick={()=>setStep(2)}>← Back</Btn><Btn variant="blue" onClick={()=>setStep(4)}>Proceed to Publish →</Btn></div></div>}
+          {step===4&&(!published?<Card style={{padding:'24px',background:BRAND.white}}><Eyebrow style={{marginBottom:'8px'}}>// PUBLISH RATE CARD</Eyebrow><div style={{background:'#FEE2E2',border:`3px solid ${BRAND.red}`,padding:'12px',marginBottom:'16px',fontFamily:"'DM Sans',sans-serif",fontSize:'13px'}}>⚠ Publishing will immediately update all user dashboards. Views refresh within 10 minutes.</div><label style={{fontFamily:"'Press Start 2P',monospace",fontSize:'9px',color:BRAND.blue,display:'block',marginBottom:'6px'}}>// PUBLISH NOTE (REQUIRED)</label><textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="e.g. FedEx Ground Q2 2026 GRI +5.9%..." style={{width:'100%',minHeight:'80px',fontFamily:"'DM Sans',sans-serif",fontSize:'13px',border:`3px solid ${BRAND.charcoal}`,padding:'10px',background:BRAND.pageBed,resize:'vertical',outline:'none',boxSizing:'border-box'}}/><div style={{display:'flex',gap:'8px',justifyContent:'flex-end',marginTop:'16px'}}><Btn variant="ghost" onClick={()=>setStep(3)}>← Back</Btn><Btn variant="dark" disabled={!note.trim()} onClick={()=>setPublished(true)}>🚀 PUBLISH NOW</Btn></div></Card>:<div style={{textAlign:'center',padding:'40px'}}><div style={{fontSize:'48px',marginBottom:'16px'}}>✅</div><div style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'24px',color:BRAND.green,textTransform:'uppercase',marginBottom:'8px'}}>Rate Card Published</div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'14px',color:'#6B7280'}}>Materialized views refreshing — all org dashboards update within 10 minutes.</div><Btn variant="blue" style={{marginTop:'20px'}} onClick={onClose}>Done</Btn></div>)}
+        </div>
+      </div>
+    </div>
+  );
+}
+function ReferenceSection() {
+  const [editT, setEditT] = React.useState(null);
+  return (
+    <div style={{padding:'28px',background:BRAND.pageBed,minHeight:'100%'}}>
+      <div style={{marginBottom:'20px'}}><Eyebrow>// 04 — REFERENCE DATA</Eyebrow><h1 style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'32px',color:BRAND.charcoal,textTransform:'uppercase',lineHeight:1}}>Rate Card Editor</h1></div>
+      <div style={{background:'#FEF3C7',border:`3px solid ${BRAND.amber}`,padding:'12px 16px',marginBottom:'20px',fontFamily:"'DM Sans',sans-serif",fontSize:'13px',boxShadow:`3px 3px 0 ${BRAND.charcoal}`}}>⚠ <strong>Handle with care.</strong> Reference data powers every user dashboard. Edit → Validate → Preview Impact → Publish.</div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'14px',marginBottom:'24px'}}>
+        {REF_TABLES.map(t=><Card key={t.key} style={{padding:'18px'}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'10px'}}><div style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'15px',color:BRAND.charcoal,textTransform:'uppercase',lineHeight:1.2}}>{t.label}</div><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',padding:'3px 7px',background:t.status==='live'?BRAND.green:BRAND.amber,color:BRAND.white,border:`2px solid ${BRAND.charcoal}`}}>{t.status==='live'?'// LIVE':'// DRAFT'}</span></div><div style={{display:'flex',gap:'16px',marginBottom:'12px'}}><div><Eyebrow style={{fontSize:'7px',color:'#9CA3AF',marginBottom:'2px'}}>ROWS</Eyebrow><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'16px',fontWeight:'700',color:BRAND.charcoal}}>{t.rows.toLocaleString()}</div></div><div><Eyebrow style={{fontSize:'7px',color:'#9CA3AF',marginBottom:'2px'}}>UPDATED</Eyebrow><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',color:'#6B7280'}}>{t.updated}</div></div></div><div style={{display:'flex',gap:'6px'}}><Btn variant="blue" size="sm" onClick={()=>setEditT(t)}>Edit →</Btn><Btn variant="ghost" size="sm">History</Btn></div></Card>)}
+      </div>
+      <Card style={{padding:'18px'}}><Eyebrow style={{marginBottom:'10px'}}>// SCHEDULED PUBLISHES</Eyebrow><div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 0',borderBottom:`1px solid ${BRAND.pageBed}`}}><span style={{fontFamily:"'DM Sans',sans-serif",fontWeight:'600',fontSize:'14px'}}>Our Carrier Rates</span><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.blue}}>Effective Jun 1, 2026 · 00:00 ET</span><Btn variant="danger" size="sm">Cancel</Btn></div><div style={{padding:'12px 0',color:'#9CA3AF',fontFamily:"'Press Start 2P',monospace",fontSize:'9px'}}>// NO OTHER SCHEDULED PUBLISHES</div></Card>
+      {editT&&<EditorModal table={editT} onClose={()=>setEditT(null)}/>}
+    </div>
+  );
+}
+
+// ─── PLATFORM CONTROLS ────────────────────────────────────────────────────────
+const MOCK_FLAGS = [
+  {key:'enable_mooovy_report_gen',desc:'Generate AI QBR reports from Mooovy',enabled:true,tiers:['bull'],rollout:100,updated:'2d ago'},
+  {key:'enable_2node_simulator',desc:'Two-node routing simulator on dashboard',enabled:true,tiers:['cow','bull'],rollout:100,updated:'5d ago'},
+  {key:'enable_insight_digest_email',desc:'Daily insight digest email send',enabled:true,tiers:['calf','cow','bull'],rollout:100,updated:'10d ago'},
+  {key:'enable_silo_v2',desc:'Silo v2 file manager with folder support',enabled:false,tiers:['bull'],rollout:0,updated:'1d ago'},
+  {key:'enable_am_chat',desc:'In-app chat with account manager',enabled:false,tiers:['bull'],rollout:25,updated:'3d ago'},
+  {key:'enable_carrier_api_live',desc:'Live carrier rate API (replaces static rates)',enabled:false,tiers:['cow','bull'],rollout:10,updated:'12h ago'},
+];
+const MOCK_CARDS_INIT = [
+  {id:'c1',headline:'FedEx Ground GRI +5.9% effective Jun 2026',category:'Carrier',severity:'warning',impact:'+$0.62/shipment',generated:'2026-05-01 06:00',state:'pending'},
+  {id:'c2',headline:'USPS postal rate increase delayed until Q3',category:'Carrier',severity:'opportunity',impact:'Saves ~$0.18/shipment',generated:'2026-05-01 06:00',state:'pending'},
+  {id:'c3',headline:'New tariff on Chinese goods — electronics +25%',category:'Trade',severity:'warning',impact:'Category dependent',generated:'2026-04-30 06:00',state:'approved'},
+];
+function PlatformSection() {
+  const [tab, setTab] = React.useState('FLAGS');
+  const [flags, setFlags] = React.useState(MOCK_FLAGS.map(f=>({...f})));
+  const [aiOn, setAiOn] = React.useState(true);
+  const [killModal, setKillModal] = React.useState(false);
+  const [cards, setCards] = React.useState(MOCK_CARDS_INIT.map(c=>({...c})));
+  const Toggle = ({on,onChange})=><div onClick={onChange} style={{width:'44px',height:'24px',background:on?BRAND.blue:'#e5e7eb',border:`3px solid ${BRAND.charcoal}`,cursor:'pointer',position:'relative',transition:'background 0.15s'}}><div style={{position:'absolute',top:'1px',left:on?'19px':'1px',width:'16px',height:'16px',background:BRAND.white,border:`2px solid ${BRAND.charcoal}`,transition:'left 0.15s'}}/></div>;
+  return (
+    <div style={{padding:'28px',background:BRAND.pageBed,minHeight:'100%'}}>
+      <div style={{marginBottom:'20px'}}><Eyebrow>// 05 — PLATFORM CONTROLS</Eyebrow><h1 style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'32px',color:BRAND.charcoal,textTransform:'uppercase',lineHeight:1}}>Platform Controls</h1></div>
+      <TabBar tabs={['FLAGS','AI OPS','INSIGHT FEED','QUOTAS','EMAIL TEMPLATES']} active={tab} onSelect={setTab} style={{marginBottom:'20px',background:BRAND.white}}/>
+      {tab==='FLAGS'&&<div>
+        <Card style={{padding:'16px',marginBottom:'16px',borderLeft:`5px solid ${BRAND.red}`}}><div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}><div><Eyebrow style={{fontSize:'8px',color:BRAND.red}}>// GLOBAL KILL SWITCH</Eyebrow><div style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'16px',color:BRAND.charcoal,textTransform:'uppercase'}}>Disable All Experimental Features</div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'12px',color:'#6B7280',marginTop:'2px'}}>Overrides all feature flags to false globally.</div></div><Btn variant="danger" size="sm">KILL ALL</Btn></div></Card>
+        <div style={{border:`3px solid ${BRAND.charcoal}`,boxShadow:px(),background:BRAND.white}}><div style={{display:'grid',gridTemplateColumns:'2fr 3fr 60px 1fr 60px 80px',padding:'8px 14px',background:BRAND.charcoal}}>{['FLAG KEY','DESCRIPTION','ON/OFF','TIERS','ROLLOUT','UPDATED'].map(h=><span key={h} style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.sky}}>{h}</span>)}</div>{flags.map((f,i)=><div key={f.key} style={{display:'grid',gridTemplateColumns:'2fr 3fr 60px 1fr 60px 80px',padding:'12px 14px',borderBottom:`1px solid ${BRAND.pageBed}`,alignItems:'center',background:i%2===0?BRAND.white:BRAND.pageBed}}><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.blue}}>{f.key}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',color:'#374151'}}>{f.desc}</span><Toggle on={f.enabled} onChange={()=>setFlags(prev=>prev.map(fl=>fl.key===f.key?{...fl,enabled:!fl.enabled}:fl))}/><div style={{display:'flex',gap:'3px',flexWrap:'wrap'}}>{f.tiers.map(t=><span key={t} style={{fontFamily:"'Press Start 2P',monospace",fontSize:'7px',padding:'2px 4px',background:BRAND.sky+'44',border:`1px solid ${BRAND.charcoal}`,color:BRAND.blue}}>{t}</span>)}</div><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'9px',color:f.rollout===100?BRAND.green:BRAND.amber}}>{f.rollout}%</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'12px',color:'#9CA3AF'}}>{f.updated}</span></div>)}</div>
+        <div style={{marginTop:'12px',display:'flex',justifyContent:'flex-end'}}><Btn variant="blue" size="sm">+ New Flag</Btn></div>
+      </div>}
+      {tab==='AI OPS'&&<div style={{display:'flex',flexDirection:'column',gap:'16px'}}>
+        <Card style={{padding:'20px',border:`3px solid ${aiOn?BRAND.green:BRAND.red}`,background:aiOn?'#F0FFF4':'#FEF2F2'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}><div><Eyebrow style={{color:aiOn?BRAND.green:BRAND.red}}>// MOOOVY AI — GLOBAL STATUS</Eyebrow><div style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'20px',color:BRAND.charcoal,textTransform:'uppercase'}}>{aiOn?'GLOBALLY ENABLED':'GLOBALLY DISABLED'}</div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',color:'#6B7280',marginTop:'4px'}}>{aiOn?'All tenant Mooovy chats and insight generation are active.':'⚠ All Mooovy requests returning static maintenance message.'}</div></div><Btn variant={aiOn?'danger':'blue'} onClick={()=>{if(aiOn)setKillModal(true);else setAiOn(true);}}>{aiOn?'🔴 DISABLE AI':'🟢 ENABLE AI'}</Btn></div>
+        </Card>
+        <Card style={{padding:'18px'}}><Eyebrow style={{marginBottom:'12px'}}>// MODEL VERSION PINS</Eyebrow><div style={{border:`3px solid ${BRAND.charcoal}`,background:BRAND.white}}><div style={{display:'grid',gridTemplateColumns:'2fr 1fr 2fr 1fr',padding:'8px 14px',background:BRAND.charcoal}}>{['ORG (NULL=GLOBAL)','ROLE','MODEL STRING','PINNED BY'].map(h=><span key={h} style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.sky}}>{h}</span>)}</div>{[{org:'(global)',role:'chat',model:'claude-sonnet-4-20250514',by:'founder@'},{org:'Titan Outdoor Gear',role:'insight',model:'claude-haiku-4-5',by:'founder@'}].map((p,i)=><div key={i} style={{display:'grid',gridTemplateColumns:'2fr 1fr 2fr 1fr',padding:'10px 14px',borderBottom:`1px solid ${BRAND.pageBed}`,alignItems:'center',background:i%2===0?BRAND.white:BRAND.pageBed}}><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:p.org==='(global)'?'700':'400'}}>{p.org}</span><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.blue}}>{p.role}</span><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:'#374151'}}>{p.model}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'12px',color:'#9CA3AF'}}>{p.by}</span></div>)}</div><div style={{marginTop:'10px'}}><Btn variant="ghost" size="sm">+ Add Pin</Btn></div></Card>
+      </div>}
+      {tab==='INSIGHT FEED'&&<div style={{display:'flex',flexDirection:'column',gap:'16px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}><Eyebrow>// AI-GENERATED CARD REVIEW QUEUE</Eyebrow><Btn variant="blue" size="sm">+ Create Manual Card</Btn></div>
+        {cards.filter(c=>c.state==='pending').map(card=><Card key={card.id} style={{padding:'16px',borderLeft:`4px solid ${BRAND.yellow}`}}><div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:'12px'}}><div style={{flex:1}}><div style={{display:'flex',gap:'6px',marginBottom:'6px'}}><SeverityBadge level={card.severity}/><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',padding:'3px 6px',background:BRAND.sky+'44',border:`2px solid ${BRAND.charcoal}`,color:BRAND.blue}}>{card.category.toUpperCase()}</span></div><div style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'16px',color:BRAND.charcoal,textTransform:'uppercase',lineHeight:1.2,marginBottom:'6px'}}>{card.headline}</div>{card.impact&&<div style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.green}}>// IMPACT: {card.impact}</div>}</div><div style={{display:'flex',gap:'6px',flexShrink:0}}><Btn variant="primary" size="sm" onClick={()=>setCards(prev=>prev.map(c=>c.id===card.id?{...c,state:'approved'}:c))}>Approve</Btn><Btn variant="ghost" size="sm">Edit</Btn><Btn variant="danger" size="sm" onClick={()=>setCards(prev=>prev.map(c=>c.id===card.id?{...c,state:'rejected'}:c))}>Reject</Btn></div></div></Card>)}
+        {cards.some(c=>c.state==='approved')&&<div><Eyebrow style={{marginBottom:'10px'}}>// PUBLISHED CARDS</Eyebrow>{cards.filter(c=>c.state==='approved').map(card=><Card key={card.id} style={{padding:'12px 16px',marginBottom:'8px'}}><div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'600'}}>{card.headline}</span><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.green}}>// LIVE</span></div></Card>)}</div>}
+      </div>}
+      {tab==='QUOTAS'&&<div style={{border:`3px solid ${BRAND.charcoal}`,boxShadow:px(),background:BRAND.white}}><div style={{display:'grid',gridTemplateColumns:'2fr 0.8fr 1.2fr 1.2fr 1.2fr 0.8fr',padding:'8px 14px',background:BRAND.charcoal}}>{['ORG','TIER','MOOOVY TURNS','CSV PARSES','SILO STORAGE','STATUS'].map(h=><span key={h} style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.sky}}>{h}</span>)}</div>{[{org:'Titan Outdoor Gear',tier:'bull',mooovy:[280,300],csv:[4,5],silo:'4.2/50 GB',status:'warning'},{org:'HeavyLift Co.',tier:'bull',mooovy:[190,300],csv:[3,5],silo:'2.1/50 GB',status:'ok'},{org:'BluePeak Supplies',tier:'cow',mooovy:[45,100],csv:[2,3],silo:'0.8/5 GB',status:'ok'},{org:'Coastal Freight',tier:'cow',mooovy:[8,100],csv:[0,3],silo:'0.1/5 GB',status:'ok'}].map((row,i)=><div key={i} style={{display:'grid',gridTemplateColumns:'2fr 0.8fr 1.2fr 1.2fr 1.2fr 0.8fr',padding:'10px 14px',borderBottom:`1px solid ${BRAND.pageBed}`,alignItems:'center',background:i%2===0?BRAND.white:BRAND.pageBed}}><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'700'}}>{row.org}</span><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.blue}}>{row.tier.toUpperCase()}</span>{[row.mooovy,row.csv].map(([u,l],j)=>{const pct=u/l;return(<div key={j} style={{display:'flex',flexDirection:'column',gap:'3px'}}><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:pct>0.8?BRAND.amber:'#374151'}}>{u}/{l}</span><div style={{height:'6px',background:BRAND.pageBed,border:`1px solid ${BRAND.charcoal}`}}><div style={{height:'100%',width:`${pct*100}%`,background:pct>0.8?BRAND.amber:BRAND.green}}/></div></div>);})}<span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:'#374151'}}>{row.silo}</span><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:row.status==='ok'?BRAND.green:BRAND.amber}}>{row.status==='ok'?'// OK':'// WARN'}</span></div>)}</div>}
+      {tab==='EMAIL TEMPLATES'&&<div style={{display:'flex',flexDirection:'column',gap:'10px'}}>{['Welcome','Upgrade confirmation','Payment failed','Payment retry','Suspension warning','Daily insight digest'].map((tmpl,i)=><Card key={i} style={{padding:'14px 16px',display:'flex',alignItems:'center',justifyContent:'space-between'}}><div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'14px',fontWeight:'700'}}>{tmpl}</div><div style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:'#9CA3AF',marginTop:'3px'}}>Last edited: {['3d ago','3d ago','1d ago','1d ago','5d ago','2d ago'][i]} · founder@</div></div><div style={{display:'flex',gap:'6px'}}><Btn variant="ghost" size="sm">Preview</Btn><Btn variant="blue" size="sm">Edit</Btn></div></Card>)}</div>}
+      {killModal&&<div style={{position:'fixed',inset:0,zIndex:200,background:'rgba(26,32,44,0.8)',display:'flex',alignItems:'center',justifyContent:'center'}}><Card style={{width:'440px',padding:'28px',background:BRAND.white,borderColor:BRAND.red}}><Eyebrow style={{color:BRAND.red}}>// EMERGENCY ACTION</Eyebrow><div style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'22px',color:BRAND.charcoal,textTransform:'uppercase',margin:'8px 0 12px'}}>Disable Mooovy AI Globally?</div><div style={{background:'#FEE2E2',border:`3px solid ${BRAND.red}`,padding:'12px',marginBottom:'16px',fontFamily:"'DM Sans',sans-serif",fontSize:'13px'}}>All Mooovy chat requests will return a static unavailability message. This affects ALL tenants.</div><label style={{fontFamily:"'Press Start 2P',monospace",fontSize:'9px',color:BRAND.red,display:'block',marginBottom:'6px'}}>// REASON (REQUIRED)</label><input placeholder="e.g. Anthropic API outage, cost spike incident..." style={{width:'100%',fontFamily:"'DM Sans',sans-serif",fontSize:'13px',padding:'8px',border:`3px solid ${BRAND.charcoal}`,boxSizing:'border-box',marginBottom:'16px'}}/><div style={{display:'flex',gap:'8px',justifyContent:'flex-end'}}><Btn variant="ghost" onClick={()=>setKillModal(false)}>Cancel</Btn><Btn variant="danger" onClick={()=>{setAiOn(false);setKillModal(false);}}>Confirm Disable</Btn></div></Card></div>}
+    </div>
+  );
+}
+
+// ─── AUDIT LOG ────────────────────────────────────────────────────────────────
+const ACTION_COLORS = {IMPERSONATE_USER:'#7C3AED',SUSPEND_ORG:'#D64545',REACTIVATE_ORG:'#1A7A4A',TIER_OVERRIDE:'#0052C9',RATE_CARD_PUBLISH:'#0D9488',NEWS_CARD_PUBLISH:'#0D9488',AI_KILL_SWITCH_TOGGLE:'#D64545',FEATURE_FLAG_CHANGE:'#0052C9',QUOTA_OVERRIDE:'#0052C9',COUPON_APPLIED:'#1A7A4A',PAYMENT_RETRY:'#E0A000',FORCE_LOGOUT_USER:'#E0A000',CCPA_ERASURE:'#D64545'};
+const MOCK_AUDIT = [
+  {id:'a1',ts:'2026-05-01 14:22:08',actor:'founder@shippingcow.com',role:'super-admin',action:'IMPERSONATE_USER',org:'Titan Outdoor Gear',resource:'user:jordan@titanoutdoor.com',reason:'Support ticket',ip:'104.21.88.12'},
+  {id:'a2',ts:'2026-05-01 13:55:00',actor:'founder@shippingcow.com',role:'super-admin',action:'RATE_CARD_PUBLISH',org:'—',resource:'rate_card:our_carrier_rates',reason:'FedEx Q2 2026 GRI +5.9%',ip:'104.21.88.12'},
+  {id:'a3',ts:'2026-05-01 11:10:44',actor:'founder@shippingcow.com',role:'super-admin',action:'TIER_OVERRIDE',org:'Titan Outdoor Gear',resource:'org:o1',reason:'Trial Bull upgrade — onboarding',ip:'104.21.88.12'},
+  {id:'a4',ts:'2026-04-30 16:02:11',actor:'founder@shippingcow.com',role:'super-admin',action:'SUSPEND_ORG',org:'LakeView Goods',resource:'org:o8',reason:'Non-payment after 22 days',ip:'104.21.88.12'},
+  {id:'a5',ts:'2026-04-30 09:18:35',actor:'founder@shippingcow.com',role:'super-admin',action:'FEATURE_FLAG_CHANGE',org:'—',resource:'flag:enable_carrier_api_live',reason:'Rollout to 10% for A/B test',ip:'104.21.88.12'},
+  {id:'a6',ts:'2026-04-29 14:44:22',actor:'founder@shippingcow.com',role:'super-admin',action:'NEWS_CARD_PUBLISH',org:'—',resource:'news_card:c3',reason:'Tariff update approved',ip:'104.21.88.12'},
+  {id:'a7',ts:'2026-04-28 10:31:09',actor:'founder@shippingcow.com',role:'super-admin',action:'QUOTA_OVERRIDE',org:'Titan Outdoor Gear',resource:'org:o1',reason:'Extra Mooovy turns during onboarding',ip:'104.21.88.12'},
+  {id:'a8',ts:'2026-04-27 15:20:55',actor:'founder@shippingcow.com',role:'super-admin',action:'COUPON_APPLIED',org:'Titan Outdoor Gear',resource:'org:o1',reason:'First Bull discount — BULL20',ip:'104.21.88.12'},
+  {id:'a9',ts:'2026-04-26 09:05:40',actor:'founder@shippingcow.com',role:'super-admin',action:'PAYMENT_RETRY',org:'BluePeak Supplies',resource:'subscription:o2',reason:'Manual retry after card update',ip:'104.21.88.12'},
+  {id:'a10',ts:'2026-04-25 11:14:18',actor:'founder@shippingcow.com',role:'super-admin',action:'FORCE_LOGOUT_USER',org:'Desert Dispatch',resource:'user:user@desert.com',reason:'Suspicious session detected',ip:'104.21.88.12'},
+];
+function AuditSection() {
+  const [search, setSearch] = React.useState('');
+  const [actF, setActF] = React.useState('all');
+  const [expanded, setExpanded] = React.useState(null);
+  const actionTypes=['all','IMPERSONATE_USER','SUSPEND_ORG','RATE_CARD_PUBLISH','TIER_OVERRIDE','FEATURE_FLAG_CHANGE','CCPA_ERASURE'];
+  const filtered=MOCK_AUDIT.filter(a=>(!search||a.org.toLowerCase().includes(search.toLowerCase())||a.action.includes(search.toUpperCase())||a.actor.includes(search))&&(actF==='all'||a.action===actF));
+  return (
+    <div style={{padding:'28px',background:BRAND.pageBed,minHeight:'100%'}}>
+      <div style={{marginBottom:'20px'}}><Eyebrow>// 06 — AUDIT LOG</Eyebrow><h1 style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'32px',color:BRAND.charcoal,textTransform:'uppercase',lineHeight:1}}>Audit Log</h1></div>
+      <div style={{background:BRAND.charcoal,padding:'10px 16px',marginBottom:'16px',display:'flex',alignItems:'center',gap:'10px',border:`3px solid ${BRAND.yellow}`}}><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'9px',color:BRAND.yellow}}>// APPEND-ONLY</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',color:BRAND.white}}>No admin can edit or delete audit entries. Retained for 7 years minimum.</span></div>
+      <Card style={{padding:'12px 16px',marginBottom:'14px',background:BRAND.white}}><div style={{display:'flex',gap:'10px',alignItems:'center',flexWrap:'wrap'}}><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search actor, org, action..." style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',padding:'7px 12px',border:`3px solid ${BRAND.charcoal}`,flex:'1 1 200px',outline:'none'}}/><select value={actF} onChange={e=>setActF(e.target.value)} style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',padding:'7px 10px',border:`3px solid ${BRAND.charcoal}`,background:BRAND.white,cursor:'pointer'}}>{actionTypes.map(t=><option key={t} value={t}>{t==='all'?'ALL ACTIONS':t}</option>)}</select><Btn variant="ghost" size="sm">Export CSV</Btn><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:'#9CA3AF'}}>{filtered.length} ENTRIES</span></div></Card>
+      <div style={{border:`3px solid ${BRAND.charcoal}`,boxShadow:px(),background:BRAND.white}}>
+        <div style={{display:'grid',gridTemplateColumns:'160px 1.5fr 1.8fr 1.5fr 1fr',padding:'8px 14px',background:BRAND.charcoal}}>{['TIMESTAMP','ACTOR','ACTION','ORG / RESOURCE','IP'].map(h=><span key={h} style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.sky}}>{h}</span>)}</div>
+        {filtered.map((entry,i)=>{const isExp=expanded===entry.id;const ac=ACTION_COLORS[entry.action]||BRAND.charcoal;return(<div key={entry.id}>
+          <div onClick={()=>setExpanded(isExp?null:entry.id)} style={{display:'grid',gridTemplateColumns:'160px 1.5fr 1.8fr 1.5fr 1fr',padding:'10px 14px',borderBottom:`1px solid ${BRAND.pageBed}`,alignItems:'center',cursor:'pointer',background:isExp?BRAND.sky+'22':i%2===0?BRAND.white:BRAND.pageBed}} onMouseEnter={e=>{if(!isExp)e.currentTarget.style.background=BRAND.sky+'22';}} onMouseLeave={e=>{if(!isExp)e.currentTarget.style.background=i%2===0?BRAND.white:BRAND.pageBed;}}>
+            <span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:'#9CA3AF',lineHeight:1.6}}>{entry.ts}</span>
+            <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'12px',color:'#6B7280'}}>{entry.actor}</span>
+            <span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:ac,background:ac+'18',padding:'3px 6px',display:'inline-block',border:`1px solid ${ac}44`}}>{entry.action}</span>
+            <div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'600'}}>{entry.org}</div><div style={{fontFamily:"'Press Start 2P',monospace",fontSize:'7px',color:'#9CA3AF'}}>{entry.resource}</div></div>
+            <span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'7px',color:'#9CA3AF'}}>{entry.ip}</span>
+          </div>
+          {isExp&&<div style={{padding:'14px 20px',background:BRAND.pageBed,borderBottom:`2px solid ${BRAND.charcoal}`,display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+            <div><Eyebrow style={{fontSize:'8px',marginBottom:'6px'}}>// REASON</Eyebrow><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',background:BRAND.white,border:`2px solid ${BRAND.charcoal}`,padding:'8px 10px'}}>{entry.reason}</div></div>
+            <div><Eyebrow style={{fontSize:'8px',marginBottom:'6px'}}>// ACTOR ROLE</Eyebrow><div style={{fontFamily:"'Press Start 2P',monospace",fontSize:'9px',background:BRAND.white,border:`2px solid ${BRAND.charcoal}`,padding:'8px 10px',color:BRAND.blue}}>{entry.role}</div></div>
+            <div><Eyebrow style={{fontSize:'8px',marginBottom:'6px'}}>// BEFORE VALUE</Eyebrow><pre style={{fontFamily:"'Press Start 2P',monospace",fontSize:'7px',background:BRAND.white,border:`2px solid ${BRAND.charcoal}`,padding:'8px 10px',color:BRAND.red,lineHeight:1.8,overflow:'auto'}}>{'{ "tier": "cow",\n  "status": "active" }'}</pre></div>
+            <div><Eyebrow style={{fontSize:'8px',marginBottom:'6px'}}>// AFTER VALUE</Eyebrow><pre style={{fontFamily:"'Press Start 2P',monospace",fontSize:'7px',background:BRAND.white,border:`2px solid ${BRAND.charcoal}`,padding:'8px 10px',color:BRAND.green,lineHeight:1.8,overflow:'auto'}}>{'{ "tier": "bull",\n  "status": "active",\n  "expires_at": "2026-06-01" }'}</pre></div>
+          </div>}
+        </div>);})}
+      </div>
+    </div>
+  );
+}
+
+// ─── SECURITY ─────────────────────────────────────────────────────────────────
+function SecuritySection() {
+  const suspSess=[{user:'alex@titanoutdoor.com',org:'Titan Outdoor Gear',event:'New country login',detail:'Germany (DE) — first time seen',ts:'2026-05-01 03:14',severity:'high'},{user:'owner@bluepeak.com',org:'BluePeak Supplies',event:'Impossible travel',detail:'NYC → London in 45 min',ts:'2026-04-30 22:08',severity:'critical'}];
+  return (
+    <div style={{padding:'28px',background:BRAND.pageBed,minHeight:'100%'}}>
+      <div style={{marginBottom:'20px'}}><Eyebrow>// 07 — SECURITY & COMPLIANCE</Eyebrow><h1 style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'32px',color:BRAND.charcoal,textTransform:'uppercase',lineHeight:1}}>Security & Compliance</h1></div>
+      <Card style={{padding:'0',marginBottom:'16px',overflow:'hidden'}}>
+        <div style={{padding:'14px 18px',background:BRAND.charcoal,borderBottom:`3px solid ${BRAND.red}`}}><Eyebrow style={{color:BRAND.sky}}>// SUSPICIOUS SESSIONS</Eyebrow><div style={{fontFamily:"'Black Han Sans',sans-serif",fontSize:'16px',color:BRAND.white,textTransform:'uppercase'}}>{suspSess.length} Flagged Sessions</div></div>
+        {suspSess.map((s,i)=><div key={i} style={{padding:'14px 18px',borderBottom:`1px solid ${BRAND.pageBed}`,display:'flex',alignItems:'center',justifyContent:'space-between',background:i%2===0?BRAND.white:BRAND.pageBed}}><div><div style={{display:'flex',gap:'8px',marginBottom:'4px'}}><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',padding:'3px 6px',background:s.severity==='critical'?BRAND.red:BRAND.amber,color:BRAND.white,border:`2px solid ${BRAND.charcoal}`}}>{s.severity.toUpperCase()}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'700'}}>{s.event}</span></div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',color:'#6B7280'}}>{s.user} · {s.org}</div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'12px',color:'#9CA3AF'}}>{s.detail} · {s.ts}</div></div><div style={{display:'flex',gap:'6px'}}><Btn variant="ghost" size="sm">Flag</Btn><Btn variant="danger" size="sm">Force Logout</Btn><Btn variant="blue" size="sm">Notify User</Btn></div></div>)}
+      </Card>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px'}}>
+        <Card style={{padding:'18px'}}><Eyebrow style={{marginBottom:'10px'}}>// CCPA / GDPR ERASURE</Eyebrow><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',color:'#6B7280',marginBottom:'14px'}}>Submit a guided data erasure for any org. Requires typed confirmation. Irreversible.</div><Btn variant="danger">Start Erasure Workflow →</Btn></Card>
+        <Card style={{padding:'18px'}}><Eyebrow style={{marginBottom:'10px'}}>// ADMIN USER MANAGEMENT</Eyebrow>{[{email:'founder@shippingcow.com',role:'super-admin'}].map((a,i)=><div key={i} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 0',borderBottom:`1px solid ${BRAND.pageBed}`}}><div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'13px',fontWeight:'700'}}>{a.email}</div><div style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.blue}}>{a.role}</div></div><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.green}}>// ACTIVE</span></div>)}<Btn variant="blue" size="sm" style={{marginTop:'12px'}}>+ Add Admin</Btn></Card>
+      </div>
+    </div>
+  );
+}
+
+// ─── TICKETS ─────────────────────────────────────────────────────────────────
+const TICKET_STATUS = {
+  open:        { label: 'OPEN',        bg: '#FEE2E2', color: '#991B1B' },
+  in_progress: { label: 'IN PROGRESS', bg: '#FEF3C7', color: '#92400E' },
+  resolved:    { label: 'RESOLVED',    bg: '#BBF7D0', color: '#166534' },
+};
+const TICKET_PRIORITY = {
+  urgent: { label: 'URGENT', color: '#D64545' },
+  high:   { label: 'HIGH',   color: '#E0A000' },
+  normal: { label: 'NORMAL', color: '#0052C9' },
+  low:    { label: 'LOW',    color: '#9CA3AF' },
+};
+
+const MOCK_TICKETS = [
+  {
+    id: 't1', subject: 'Dashboard showing wrong carrier rates since Apr update', org: 'Titan Outdoor Gear', orgId: 'o1', user: 'jordan@titanoutdoor.com', status: 'open', priority: 'urgent', created: '2026-05-01 13:44', updated: '2m ago',
+    messages: [
+      { id: 'm1', from: 'user', author: 'Jordan Lee', avatar: 'JL', ts: '2026-05-01 13:44', body: 'Hi, since the April rate card update our FedEx Ground Zone 4 costs are showing about 8% higher than what we were quoted. Can you check if the new rates were applied correctly? Our weekly bill jumped by ~$400.' },
+      { id: 'm2', from: 'admin', author: 'founder@shippingcow.com', avatar: 'SC', ts: '2026-05-01 13:58', body: 'Hi Jordan — thanks for flagging this. I\'m pulling up your rate card comparison now. The Q2 2026 GRI did include a 5.9% increase on FedEx Ground, which would affect Zone 4 pricing. Let me verify the exact rates applied to your account match what was in your contract.' },
+      { id: 'm3', from: 'note', author: 'founder@shippingcow.com', avatar: 'SC', ts: '2026-05-01 14:00', body: 'Internal: checked rate card publish log — looks like the correct GRI was applied. Jordan may be comparing against their old quote which predates Q2. Need to pull their contract PDF to confirm.' },
+      { id: 'm4', from: 'user', author: 'Jordan Lee', avatar: 'JL', ts: '2026-05-01 14:10', body: 'We signed in December 2024 — does our contract lock in the pre-GRI rates? I thought we had rate protection for 12 months.' },
+    ]
+  },
+  {
+    id: 't2', subject: 'Unable to upload CSV — "column mapping" error', org: 'BluePeak Supplies', orgId: 'o2', user: 'owner@bluepeak.com', status: 'in_progress', priority: 'high', created: '2026-04-30 09:12', updated: '4h ago',
+    messages: [
+      { id: 'm1', from: 'user', author: 'Blake Owner', avatar: 'BO', ts: '2026-04-30 09:12', body: 'Getting an error every time I try to upload my shipments CSV. It says "column mapping failed: missing required field carrier_code". I\'ve been uploading the same format for 3 months with no issues.' },
+      { id: 'm2', from: 'admin', author: 'founder@shippingcow.com', avatar: 'SC', ts: '2026-04-30 10:30', body: 'Hi Blake — we did push a schema update on April 29 that added carrier_code as a required column. I\'m sorry we didn\'t give you more heads up. Can you add a column called carrier_code with values like FEDEX, UPS, or USPS and re-upload? I\'ll also flag this for a better migration notice in future.' },
+    ]
+  },
+  {
+    id: 't3', subject: 'Request: add return rate to health score breakdown', org: 'HeavyLift Co.', orgId: 'o3', user: 'ops@heavylift.com', status: 'open', priority: 'normal', created: '2026-04-29 16:00', updated: '1d ago',
+    messages: [
+      { id: 'm1', from: 'user', author: 'Ops Team', avatar: 'OT', ts: '2026-04-29 16:00', body: 'Would love to see return rate included in the health score breakdown. We track returns very closely and it\'d be great to see how we benchmark against other Bull orgs on that metric.' },
+    ]
+  },
+  {
+    id: 't4', subject: 'Billing: charged twice for March invoice', org: 'KitchenPro Direct', orgId: 'o4', user: 'finance@kitchenpro.com', status: 'resolved', priority: 'urgent', created: '2026-04-15 11:00', updated: '2w ago',
+    messages: [
+      { id: 'm1', from: 'user', author: 'Finance Team', avatar: 'FT', ts: '2026-04-15 11:00', body: 'We were charged $490 twice on March 1st. Invoice #INV-2026-031 and #INV-2026-032 are duplicates. Please refund one.' },
+      { id: 'm2', from: 'admin', author: 'founder@shippingcow.com', avatar: 'SC', ts: '2026-04-15 12:30', body: 'Confirmed — I can see the duplicate charge in Stripe. Initiating a $490 refund now. Should appear on your statement within 3–5 business days. Apologies for the inconvenience.' },
+      { id: 'm3', from: 'user', author: 'Finance Team', avatar: 'FT', ts: '2026-04-19 09:00', body: 'Refund received. Thank you for the quick resolution!' },
+    ]
+  },
+  {
+    id: 't5', subject: 'Mooovy giving wrong zone efficiency score', org: 'Summit Outdoors', orgId: 'o7', user: 'data@summitoutdoors.com', status: 'open', priority: 'high', created: '2026-05-01 08:30', updated: '6h ago',
+    messages: [
+      { id: 'm1', from: 'user', author: 'Data Team', avatar: 'DT', ts: '2026-05-01 08:30', body: 'Mooovy is telling us our zone efficiency is 72% but when I manually calculate from the exported data it comes out to 84%. There\'s a 12-point discrepancy. Is the AI using stale data?' },
+    ]
+  },
+];
+
+function TicketStatusBadge({ status }) {
+  const cfg = TICKET_STATUS[status] || TICKET_STATUS.open;
+  return <span style={{ display:'inline-block', fontFamily:"'Press Start 2P',monospace", fontSize:'8px', padding:'3px 7px', background:cfg.bg, color:cfg.color, border:`2px solid ${BRAND.charcoal}`, letterSpacing:'0.03em' }}>{cfg.label}</span>;
+}
+function PriorityDot({ priority }) {
+  const cfg = TICKET_PRIORITY[priority] || TICKET_PRIORITY.normal;
+  return <span style={{ display:'inline-flex', alignItems:'center', gap:'4px', fontFamily:"'Press Start 2P',monospace", fontSize:'8px', color:cfg.color }}><span style={{ width:'8px', height:'8px', background:cfg.color, border:`2px solid ${BRAND.charcoal}`, display:'inline-block', flexShrink:0 }}/>{cfg.label}</span>;
+}
+function Avatar({ initials, fromType }) {
+  const bg = fromType === 'user' ? BRAND.blue : fromType === 'note' ? BRAND.amber : BRAND.charcoal;
+  return <div style={{ width:'32px', height:'32px', background:bg, border:`2px solid ${BRAND.charcoal}`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Press Start 2P',monospace", fontSize:'8px', color:BRAND.white, flexShrink:0, boxShadow:pxSm() }}>{initials}</div>;
+}
+
+function TicketThread({ ticket, onStatusChange, onViewOrg }) {
+  const [reply, setReply] = React.useState('');
+  const [noteMode, setNoteMode] = React.useState(false);
+  const [msgs, setMsgs] = React.useState(ticket.messages);
+  const [status, setStatus] = React.useState(ticket.status);
+  const threadRef = React.useRef(null);
+
+  React.useEffect(() => {
+    setMsgs(ticket.messages);
+    setStatus(ticket.status);
+    setReply('');
+    setNoteMode(false);
+  }, [ticket.id]);
+
+  const sendReply = () => {
+    if (!reply.trim()) return;
+    const newMsg = { id: 'm'+Date.now(), from: noteMode ? 'note' : 'admin', author: 'founder@shippingcow.com', avatar: 'SC', ts: new Date().toISOString().slice(0,16).replace('T',' '), body: reply };
+    setMsgs(prev => [...prev, newMsg]);
+    setReply('');
+  };
+
+  const cycleStatus = () => {
+    const order = ['open','in_progress','resolved'];
+    const next = order[(order.indexOf(status)+1) % order.length];
+    setStatus(next);
+    onStatusChange && onStatusChange(ticket.id, next);
+  };
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', height:'100%', background:BRAND.white }}>
+      {/* Thread header */}
+      <div style={{ padding:'16px 20px', borderBottom:`3px solid ${BRAND.charcoal}`, background:BRAND.charcoal, flexShrink:0 }}>
+        <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:'12px' }}>
+          <div style={{ flex:1, minWidth:0 }}>
+            <Eyebrow style={{ color:BRAND.sky, marginBottom:'4px' }}>// TICKET {ticket.id.toUpperCase()}</Eyebrow>
+            <div style={{ fontFamily:"'Black Han Sans',sans-serif", fontSize:'16px', color:BRAND.white, textTransform:'uppercase', lineHeight:1.2, marginBottom:'8px' }}>{ticket.subject}</div>
+            <div style={{ display:'flex', gap:'8px', alignItems:'center', flexWrap:'wrap' }}>
+              <TicketStatusBadge status={status}/>
+              <PriorityDot priority={ticket.priority}/>
+              <button onClick={()=>onViewOrg&&onViewOrg(ticket.orgId)} style={{ fontFamily:"'Press Start 2P',monospace", fontSize:'8px', background:'transparent', border:`2px solid ${BRAND.sky}`, color:BRAND.sky, padding:'3px 8px', cursor:'pointer' }}>{ticket.org} →</button>
+            </div>
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:'6px', alignItems:'flex-end', flexShrink:0 }}>
+            <Btn variant="ghost" size="sm" style={{ background:'transparent', border:`2px solid rgba(255,255,255,0.3)`, color:BRAND.white, boxShadow:'none' }} onClick={cycleStatus}>
+              {status === 'open' ? 'Mark In Progress' : status === 'in_progress' ? 'Mark Resolved ✓' : 'Reopen'}
+            </Btn>
+            <Btn variant="blue" size="sm" onClick={()=>onViewOrg&&onViewOrg(ticket.orgId)}>Impersonate User</Btn>
+          </div>
+        </div>
+        <div style={{ marginTop:'10px', fontFamily:"'DM Sans',sans-serif", fontSize:'12px', color:'rgba(255,255,255,0.5)' }}>
+          {ticket.user} · opened {ticket.created} · {msgs.length} messages
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div ref={threadRef} style={{ flex:1, overflow:'auto', padding:'20px' }}>
+        <div style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
+          {msgs.map((msg) => {
+            const isUser = msg.from === 'user';
+            const isNote = msg.from === 'note';
+            return (
+              <div key={msg.id} style={{ display:'flex', gap:'10px', flexDirection: isUser ? 'row-reverse' : 'row' }}>
+                <Avatar initials={msg.avatar} fromType={msg.from}/>
+                <div style={{ maxWidth:'72%', display:'flex', flexDirection:'column', gap:'4px', alignItems: isUser ? 'flex-end' : 'flex-start' }}>
+                  <div style={{ display:'flex', gap:'8px', alignItems:'baseline' }}>
+                    <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'12px', fontWeight:'700', color:BRAND.charcoal }}>{msg.author}</span>
+                    <span style={{ fontFamily:"'Press Start 2P',monospace", fontSize:'7px', color:'#9CA3AF' }}>{msg.ts}</span>
+                    {isNote && <span style={{ fontFamily:"'Press Start 2P',monospace", fontSize:'7px', background:BRAND.amber, color:BRAND.charcoal, padding:'2px 5px', border:`1px solid ${BRAND.charcoal}` }}>INTERNAL NOTE</span>}
+                  </div>
+                  <div style={{
+                    padding:'12px 14px',
+                    background: isNote ? '#FFFBEB' : isUser ? BRAND.blue : BRAND.pageBed,
+                    border: `3px solid ${isNote ? BRAND.amber : BRAND.charcoal}`,
+                    boxShadow: isUser ? `3px 3px 0 ${BRAND.charcoal}` : `3px 3px 0 ${isNote ? BRAND.amber : BRAND.charcoal}`,
+                    color: isUser ? BRAND.white : BRAND.charcoal,
+                    fontFamily:"'DM Sans',sans-serif", fontSize:'13px', lineHeight:1.6,
+                  }}>{msg.body}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Reply box */}
+      <div style={{ borderTop:`3px solid ${BRAND.charcoal}`, background:BRAND.white, flexShrink:0 }}>
+        {/* Note / Reply toggle */}
+        <div style={{ display:'flex', borderBottom:`2px solid ${BRAND.pageBed}` }}>
+          {[{v:false,label:'REPLY TO USER'},{v:true,label:'INTERNAL NOTE'}].map(({v,label})=>(
+            <button key={label} onClick={()=>setNoteMode(v)} style={{ fontFamily:"'Press Start 2P',monospace", fontSize:'8px', padding:'9px 14px', border:'none', borderBottom:noteMode===v?`3px solid ${v?BRAND.amber:BRAND.blue}`:'3px solid transparent', background:noteMode===v?(v?'#FFFBEB':BRAND.pageBed):BRAND.white, color:noteMode===v?(v?BRAND.amber:BRAND.blue):BRAND.charcoal, cursor:'pointer', marginBottom:'-2px' }}>{label}</button>
+          ))}
+        </div>
+        <div style={{ padding:'12px 16px', display:'flex', gap:'10px', alignItems:'flex-end' }}>
+          <textarea
+            value={reply} onChange={e=>setReply(e.target.value)}
+            onKeyDown={e=>{ if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)) sendReply(); }}
+            placeholder={noteMode ? 'Add an internal note (not visible to user)...' : 'Reply to user... (Cmd+Enter to send)'}
+            style={{ flex:1, minHeight:'72px', maxHeight:'160px', fontFamily:"'DM Sans',sans-serif", fontSize:'13px', padding:'10px', border:`3px solid ${noteMode?BRAND.amber:BRAND.charcoal}`, background:noteMode?'#FFFBEB':BRAND.white, resize:'vertical', outline:'none', color:BRAND.charcoal, lineHeight:1.5 }}
+          />
+          <div style={{ display:'flex', flexDirection:'column', gap:'6px' }}>
+            <Btn variant={noteMode?'primary':'blue'} size="sm" onClick={sendReply} disabled={!reply.trim()} style={{ whiteSpace:'nowrap', background:noteMode?BRAND.amber:BRAND.blue }}>
+              {noteMode ? 'Add Note' : 'Send Reply'}
+            </Btn>
+            <Btn variant="ghost" size="sm" onClick={()=>setReply('')} style={{ fontSize:'8px' }}>Clear</Btn>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TicketsSection({ onViewOrg }) {
+  const [tickets, setTickets] = React.useState(MOCK_TICKETS);
+  const [selected, setSelected] = React.useState(MOCK_TICKETS[0]);
+  const [statusF, setStatusF] = React.useState('all');
+  const [priorityF, setPriorityF] = React.useState('all');
+  const [search, setSearch] = React.useState('');
+
+  const filtered = tickets.filter(t => {
+    const ms = !search || t.subject.toLowerCase().includes(search.toLowerCase()) || t.org.toLowerCase().includes(search.toLowerCase()) || t.user.includes(search);
+    return ms && (statusF==='all'||t.status===statusF) && (priorityF==='all'||t.priority===priorityF);
+  });
+
+  const updateStatus = (id, newStatus) => {
+    setTickets(prev => prev.map(t => t.id===id ? {...t, status:newStatus} : t));
+    setSelected(prev => prev.id===id ? {...prev, status:newStatus} : prev);
+  };
+
+  const openCount = tickets.filter(t=>t.status==='open').length;
+  const urgentCount = tickets.filter(t=>t.priority==='urgent'&&t.status!=='resolved').length;
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', height:'100%', background:BRAND.pageBed }}>
+      {/* Section header */}
+      <div style={{ padding:'20px 28px 0', flexShrink:0 }}>
+        <div style={{ marginBottom:'16px', display:'flex', alignItems:'flex-end', justifyContent:'space-between' }}>
+          <div>
+            <Eyebrow>// 08 — SUPPORT TICKETS</Eyebrow>
+            <h1 style={{ fontFamily:"'Black Han Sans',sans-serif", fontSize:'32px', color:BRAND.charcoal, textTransform:'uppercase', lineHeight:1 }}>Tickets</h1>
+          </div>
+          <div style={{ display:'flex', gap:'10px' }}>
+            <Card style={{ padding:'10px 16px', background:BRAND.white }}>
+              <Eyebrow style={{ fontSize:'7px', color:'#9CA3AF', marginBottom:'2px' }}>OPEN</Eyebrow>
+              <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'22px', fontWeight:'700', color:BRAND.red }}>{openCount}</div>
+            </Card>
+            <Card style={{ padding:'10px 16px', background:BRAND.white }}>
+              <Eyebrow style={{ fontSize:'7px', color:'#9CA3AF', marginBottom:'2px' }}>URGENT</Eyebrow>
+              <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'22px', fontWeight:'700', color:BRAND.amber }}>{urgentCount}</div>
+            </Card>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div style={{ display:'flex', gap:'8px', alignItems:'center', marginBottom:'16px', flexWrap:'wrap' }}>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search tickets..." style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'13px', padding:'7px 12px', border:`3px solid ${BRAND.charcoal}`, flex:'1 1 180px', outline:'none', maxWidth:'260px' }}/>
+          <div style={{ display:'flex', gap:'0' }}>
+            {['all','open','in_progress','resolved'].map(s=>(
+              <button key={s} onClick={()=>setStatusF(s)} style={{ fontFamily:"'Press Start 2P',monospace", fontSize:'8px', padding:'7px 10px', background:statusF===s?BRAND.charcoal:BRAND.white, color:statusF===s?BRAND.yellow:BRAND.charcoal, border:`2px solid ${BRAND.charcoal}`, borderRight:'none', cursor:'pointer', ':last-child':{borderRight:`2px solid ${BRAND.charcoal}`} }}>
+                {s==='all'?'ALL':s.replace('_',' ').toUpperCase()}
+              </button>
+            ))}
+            <button style={{ border:`2px solid ${BRAND.charcoal}`, padding:'7px 2px', background:'transparent' }}></button>
+          </div>
+          <div style={{ display:'flex', gap:'0' }}>
+            {['all','urgent','high','normal','low'].map(p=>(
+              <button key={p} onClick={()=>setPriorityF(p)} style={{ fontFamily:"'Press Start 2P',monospace", fontSize:'8px', padding:'7px 9px', background:priorityF===p?BRAND.charcoal:BRAND.white, color:priorityF===p?BRAND.yellow:(TICKET_PRIORITY[p]?.color||BRAND.charcoal), border:`2px solid ${BRAND.charcoal}`, borderRight:'none', cursor:'pointer' }}>
+                {p.toUpperCase()}
+              </button>
+            ))}
+            <button style={{ border:`2px solid ${BRAND.charcoal}`, padding:'7px 2px', background:'transparent' }}></button>
+          </div>
+          <span style={{ fontFamily:"'Press Start 2P',monospace", fontSize:'8px', color:'#9CA3AF', marginLeft:'auto' }}>{filtered.length} TICKETS</span>
+        </div>
+      </div>
+
+      {/* Split pane */}
+      <div style={{ display:'grid', gridTemplateColumns:'360px 1fr', flex:1, overflow:'hidden', borderTop:`3px solid ${BRAND.charcoal}` }}>
+        {/* Left: ticket list */}
+        <div style={{ borderRight:`3px solid ${BRAND.charcoal}`, overflow:'auto', background:BRAND.white }}>
+          {filtered.length === 0 && (
+            <div style={{ padding:'32px', textAlign:'center', fontFamily:"'Press Start 2P',monospace", fontSize:'9px', color:'#9CA3AF' }}>// NO TICKETS MATCH</div>
+          )}
+          {filtered.map(t => {
+            const isSelected = selected?.id === t.id;
+            const unread = t.messages.filter(m=>m.from==='user').length;
+            return (
+              <div key={t.id} onClick={()=>setSelected(t)}
+                style={{ padding:'14px 16px', borderBottom:`2px solid ${BRAND.pageBed}`, cursor:'pointer', background: isSelected ? BRAND.pageBed : BRAND.white, borderLeft: isSelected ? `4px solid ${BRAND.yellow}` : '4px solid transparent', transition:'background 0.1s' }}
+                onMouseEnter={e=>{ if(!isSelected) e.currentTarget.style.background=BRAND.sky+'22'; }}
+                onMouseLeave={e=>{ if(!isSelected) e.currentTarget.style.background=BRAND.white; }}
+              >
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'5px', gap:'6px' }}>
+                  <TicketStatusBadge status={t.status}/>
+                  <PriorityDot priority={t.priority}/>
+                  <span style={{ fontFamily:"'Press Start 2P',monospace", fontSize:'7px', color:'#9CA3AF', marginLeft:'auto' }}>{t.updated}</span>
+                </div>
+                <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'13px', fontWeight:'700', color:BRAND.charcoal, marginBottom:'3px', lineHeight:1.3 }}>{t.subject}</div>
+                <div style={{ display:'flex', gap:'6px', alignItems:'center', marginTop:'4px' }}>
+                  <span style={{ fontFamily:"'Press Start 2P',monospace", fontSize:'8px', color:BRAND.blue }}>{t.org}</span>
+                  <span style={{ color:'#9CA3AF', fontSize:'11px' }}>·</span>
+                  <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'11px', color:'#9CA3AF' }}>{t.user}</span>
+                </div>
+                <div style={{ display:'flex', alignItems:'center', gap:'4px', marginTop:'5px' }}>
+                  <span style={{ fontFamily:"'Press Start 2P',monospace", fontSize:'7px', color:'#9CA3AF' }}>{t.messages.length} msg{t.messages.length!==1?'s':''}</span>
+                  {t.status !== 'resolved' && t.messages[t.messages.length-1]?.from === 'user' && (
+                    <span style={{ fontFamily:"'Press Start 2P',monospace", fontSize:'7px', background:BRAND.red, color:BRAND.white, padding:'2px 4px', border:`1px solid ${BRAND.charcoal}` }}>NEEDS REPLY</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Right: thread */}
+        <div style={{ overflow:'hidden', display:'flex', flexDirection:'column' }}>
+          {selected ? (
+            <TicketThread ticket={selected} onStatusChange={updateStatus} onViewOrg={onViewOrg}/>
+          ) : (
+            <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:'12px' }}>
+              <div style={{ fontFamily:"'Press Start 2P',monospace", fontSize:'11px', color:'#9CA3AF' }}>// SELECT A TICKET</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── TWEAKS PANEL ─────────────────────────────────────────────────────────────
+const __TWEAKS_STYLE = `
+  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;max-height:calc(100vh - 32px);display:flex;flex-direction:column;background:rgba(250,249,247,.85);color:#29261b;-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border:.5px solid rgba(255,255,255,.6);border-radius:0;box-shadow:4px 4px 0 #1A202C;font:11.5px/1.4 ui-sans-serif,system-ui,-apple-system,sans-serif;overflow:hidden}
+  .twk-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 8px 10px 14px;cursor:move;user-select:none;background:#1A202C;color:#fff}
+  .twk-hd b{font-size:11px;font-weight:700;font-family:'Press Start 2P',monospace;letter-spacing:0.04em;color:#FEB81B}
+  .twk-x{appearance:none;border:2px solid rgba(255,255,255,0.3);background:transparent;color:rgba(255,255,255,.8);width:24px;height:24px;cursor:pointer;font-size:13px;line-height:1}
+  .twk-x:hover{background:rgba(255,255,255,.1);color:#fff}
+  .twk-body{padding:10px 14px 14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0}
+  .twk-row{display:flex;flex-direction:column;gap:5px}
+  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;color:rgba(41,38,27,.72)}
+  .twk-lbl>span:first-child{font-weight:500}
+  .twk-sect{font-size:9px;font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:#0052C9;padding:8px 0 2px;font-family:'Press Start 2P',monospace}
+  .twk-toggle{position:relative;width:36px;height:20px;border:3px solid #1A202C;background:#e5e7eb;transition:background .15s;cursor:pointer;padding:0;border-radius:0}
+  .twk-toggle[data-on="1"]{background:#0052C9}
+  .twk-toggle i{position:absolute;top:1px;left:1px;width:14px;height:14px;background:#fff;border:2px solid #1A202C;transition:transform .15s}
+  .twk-toggle[data-on="1"] i{transform:translateX(16px)}
+  .twk-seg{position:relative;display:flex;padding:2px;border:2px solid #1A202C;background:#F4F7FF;user-select:none}
+  .twk-seg-thumb{position:absolute;top:2px;bottom:2px;background:#0052C9;transition:left .15s,width .15s}
+  .twk-seg button{position:relative;z-index:1;flex:1;border:0;background:transparent;color:#1A202C;font:8px/1.2 'Press Start 2P',monospace;min-height:22px;cursor:pointer;padding:4px 3px}
+  .twk-seg button[aria-checked="true"]{color:#fff}
+`;
+
+function useTweaks(defaults) {
+  const [values, setValues] = React.useState(defaults);
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null ? keyOrEdits : { [keyOrEdits]: val };
+    setValues(prev => ({ ...prev, ...edits }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+  }, []);
+  return [values, setTweak];
+}
+
+function TweaksPanel({ children }) {
+  const [open, setOpen] = React.useState(false);
+  React.useEffect(() => {
+    const onMsg = e => {
+      if (e?.data?.type === '__activate_edit_mode') setOpen(true);
+      else if (e?.data?.type === '__deactivate_edit_mode') setOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+  const dismiss = () => { setOpen(false); window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*'); };
+  if (!open) return null;
+  return (<><style>{__TWEAKS_STYLE}</style><div className="twk-panel"><div className="twk-hd"><b>// TWEAKS</b><button className="twk-x" onClick={dismiss}>✕</button></div><div className="twk-body">{children}</div></div></>);
+}
+function TweakSection({ label }) { return <div className="twk-sect">{label}</div>; }
+function TweakToggle({ label, value, onChange }) {
+  return <div className="twk-row twk-row-h"><div className="twk-lbl"><span>{label}</span></div><button type="button" className="twk-toggle" data-on={value?'1':'0'} onClick={()=>onChange(!value)}><i/></button></div>;
+}
+function TweakRadio({ label, value, options, onChange }) {
+  const opts = options.map(o=>typeof o==='object'?o:{value:o,label:o});
+  const idx = Math.max(0,opts.findIndex(o=>o.value===value));
+  const n = opts.length;
+  return <div className="twk-row"><div className="twk-lbl"><span>{label}</span></div><div className="twk-seg">{opts.map((o,i)=><button key={o.value} type="button" role="radio" aria-checked={o.value===value} style={{background:o.value===value?'#0052C9':'transparent',color:o.value===value?'#fff':'#1A202C'}} onClick={()=>onChange(o.value)}>{o.label}</button>)}</div></div>;
+}
+
+// ─── APP ──────────────────────────────────────────────────────────────────────
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "sidebarCollapsed": false,
+  "density": "comfortable"
+}/*EDITMODE-END*/;
+
+const PAGES = { dashboard:DashboardSection, customers:CustomersSection, revenue:RevenueSection, reference:ReferenceSection, platform:PlatformSection, audit:AuditSection, security:SecuritySection, tickets:TicketsSection };
+
+function App() {
+  const [page, setPage] = React.useState('dashboard');
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const PageComp = PAGES[page] || DashboardSection;
+
+  return (
+    <div style={{display:'flex',height:'100vh',width:'100vw',overflow:'hidden'}}>
+      <Sidebar active={page} onNavigate={setPage} collapsed={tweaks.sidebarCollapsed}/>
+      <main style={{flex:1,overflow:'auto',display:'flex',flexDirection:'column'}}>
+        {/* Topbar */}
+        <div style={{height:'48px',background:BRAND.white,borderBottom:`3px solid ${BRAND.charcoal}`,display:'flex',alignItems:'center',padding:'0 24px',gap:'12px',flexShrink:0,position:'sticky',top:0,zIndex:5}}>
+          <button onClick={()=>setTweak('sidebarCollapsed',!tweaks.sidebarCollapsed)} style={{background:'none',border:`2px solid ${BRAND.charcoal}`,width:'28px',height:'28px',cursor:'pointer',fontSize:'12px',display:'flex',alignItems:'center',justifyContent:'center',color:BRAND.charcoal,flexShrink:0}} title="Toggle sidebar">☰</button>
+          <div style={{display:'flex',alignItems:'center',gap:'6px',flex:1}}>
+            <span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:'#9CA3AF'}}>ADMIN</span>
+            <span style={{color:'#9CA3AF',fontSize:'12px'}}>›</span>
+            <span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.blue}}>{page.toUpperCase()}</span>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+            <span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:'#9CA3AF'}}>MAY 1, 2026</span>
+            <div style={{display:'flex',alignItems:'center',gap:'5px'}}><div style={{width:'8px',height:'8px',background:BRAND.green,border:`2px solid ${BRAND.charcoal}`}}/><span style={{fontFamily:"'Press Start 2P',monospace",fontSize:'8px',color:BRAND.green}}>ALL SYSTEMS OK</span></div>
+          </div>
+        </div>
+        {/* Page */}
+        <div style={{flex:1,overflow:page==='tickets'?'hidden':'auto'}}>
+          {page==='tickets'
+            ? <TicketsSection onViewOrg={(orgId)=>{ setPage('customers'); }}/>
+            : <PageComp/>
+          }
+        </div>
+      </main>
+
+      <TweaksPanel>
+        <TweakSection label="Layout"/>
+        <TweakToggle label="Collapse Sidebar" value={tweaks.sidebarCollapsed} onChange={v=>setTweak('sidebarCollapsed',v)}/>
+        <TweakRadio label="Density" value={tweaks.density} options={['compact','comfortable','spacious']} onChange={v=>setTweak('density',v)}/>
+        <TweakSection label="Navigate to"/>
+        {Object.keys(PAGES).map(p=><button key={p} onClick={()=>setPage(p)} style={{width:'100%',textAlign:'left',padding:'6px 8px',fontFamily:"'Press Start 2P',monospace",fontSize:'8px',background:page===p?BRAND.blue:'transparent',color:page===p?BRAND.white:BRAND.charcoal,border:`2px solid ${page===p?BRAND.blue:'#e5e7eb'}`,cursor:'pointer',marginBottom:'3px'}}>{p.toUpperCase()}</button>)}
+      </TweaksPanel>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "extends": "next/core-web-vitals",
+  "ignorePatterns": [
+    "Admin Portal.html",
+    "tweaks-panel.jsx",
+    "components/*.jsx",
+    "userportal",
+    "homepage",
+    "landingpage",
+    "brandguide",
+    "uploads"
+  ]
+}

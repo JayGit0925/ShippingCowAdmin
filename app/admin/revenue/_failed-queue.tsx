@@ -1,0 +1,88 @@
+import type { Route } from 'next';
+import { BRAND } from '@/lib/brand';
+import { Button } from '@/components/ui/button';
+import type { FailedPaymentRow } from '@/lib/metrics';
+
+export function FailedQueue({ rows }: { rows: FailedPaymentRow[] }) {
+  return (
+    <div
+      style={{
+        background: BRAND.white,
+        border: `3px solid ${BRAND.charcoal}`,
+        boxShadow: `4px 4px 0 ${BRAND.charcoal}`,
+        overflow: 'auto',
+      }}
+    >
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ background: BRAND.pageBed, borderBottom: `3px solid ${BRAND.charcoal}` }}>
+            {['ORG', 'MRR', 'STRIPE CUST', 'UPDATED', 'ACTIONS'].map((h) => (
+              <th
+                key={h}
+                style={{
+                  fontFamily: "'Press Start 2P', monospace",
+                  fontSize: 9,
+                  color: BRAND.blue,
+                  padding: '10px 12px',
+                  textAlign: 'left',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr
+              key={r.org_id}
+              style={{
+                borderBottom: `1px solid ${BRAND.sky}`,
+                background: i % 2 ? '#FAFBFF' : BRAND.white,
+              }}
+            >
+              <td style={cell}>{r.org_name}</td>
+              <td style={cell}>{r.mrr != null ? `$${r.mrr.toLocaleString()}` : '—'}</td>
+              <td style={cell}>{r.stripe_customer_id ?? '—'}</td>
+              <td style={cell}>{new Date(r.updated_at).toISOString().slice(0, 10)}</td>
+              <td style={cell}>
+                <form
+                  action={`/api/admin/billing/retry` as Route}
+                  method="post"
+                  style={{ display: 'inline-flex', gap: 6 }}
+                >
+                  <input type="hidden" name="stripeCustomerId" value={r.stripe_customer_id ?? ''} />
+                  <input type="hidden" name="orgId" value={r.org_id} />
+                  <Button variant="ghost" size="sm">Retry</Button>
+                </form>
+                <form
+                  action={`/api/admin/billing/cancel` as Route}
+                  method="post"
+                  style={{ display: 'inline-flex', gap: 6, marginLeft: 6 }}
+                >
+                  <input type="hidden" name="orgId" value={r.org_id} />
+                  <Button variant="danger" size="sm">Cancel</Button>
+                </form>
+              </td>
+            </tr>
+          ))}
+          {rows.length === 0 ? (
+            <tr>
+              <td colSpan={5} style={{ ...cell, padding: 24, textAlign: 'center' }}>
+                No failed payments.
+              </td>
+            </tr>
+          ) : null}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+const cell: React.CSSProperties = {
+  fontFamily: "'DM Sans', sans-serif",
+  fontSize: 13,
+  color: BRAND.charcoal,
+  padding: '8px 12px',
+};

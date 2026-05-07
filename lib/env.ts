@@ -6,11 +6,14 @@ export const ENV = {
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
   USER_PORTAL_URL: process.env.USER_PORTAL_URL ?? '',
   APP_URL: process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001',
+  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ?? '',
 };
 
 export const SUPABASE_CONFIGURED =
   has('NEXT_PUBLIC_SUPABASE_URL') &&
   has('NEXT_PUBLIC_SUPABASE_ANON_KEY') &&
   has('SUPABASE_SERVICE_ROLE_KEY');
+
+export const STRIPE_CONFIGURED = has('STRIPE_SECRET_KEY');
 
 export const DEV_BYPASS = !SUPABASE_CONFIGURED && process.env.NODE_ENV !== 'production';

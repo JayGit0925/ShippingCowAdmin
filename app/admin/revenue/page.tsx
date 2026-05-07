@@ -1,12 +1,23 @@
-import { Card } from '@/components/ui/card';
 import { Eyebrow } from '@/components/ui/eyebrow';
 import { BRAND } from '@/lib/brand';
+import { fetchFailedPaymentQueue, fetchFunnel, fetchMrrSeries } from '@/lib/metrics';
+import { Sparkline } from '@/components/ui/sparkline';
+import { Funnel } from './_funnel';
+import { FailedQueue } from './_failed-queue';
 
-export default function Page() {
+export const dynamic = 'force-dynamic';
+
+export default async function RevenuePage() {
+  const [funnel, queue, series] = await Promise.all([
+    fetchFunnel(),
+    fetchFailedPaymentQueue(),
+    fetchMrrSeries(),
+  ]);
+  const points = series.map((s) => ({ x: s.month, y: s.new_mrr }));
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
-        <Eyebrow>{'// PHASE A SCAFFOLD'}</Eyebrow>
+        <Eyebrow>{'// REVENUE'}</Eyebrow>
         <h1
           style={{
             fontFamily: "'Black Han Sans', sans-serif",
@@ -18,11 +29,15 @@ export default function Page() {
           Revenue
         </h1>
       </div>
-      <Card style={{ padding: 24 }}>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: BRAND.charcoal }}>
-          MRR funnel + failed payment queue wired in Phase D. See handoff §5.3.
-        </p>
-      </Card>
+      <Sparkline series={points} label="NEW MRR (12-MONTH TRAILING)" />
+      <div>
+        <Eyebrow>{'// CONVERSION FUNNEL (30D)'}</Eyebrow>
+        <Funnel stages={funnel} />
+      </div>
+      <div>
+        <Eyebrow>{'// FAILED PAYMENT QUEUE'}</Eyebrow>
+        <FailedQueue rows={queue} />
+      </div>
     </div>
   );
 }

@@ -1,12 +1,35 @@
-import { Card } from '@/components/ui/card';
 import { Eyebrow } from '@/components/ui/eyebrow';
 import { BRAND } from '@/lib/brand';
+import {
+  fetchActiveOrgs,
+  fetchCalfToCowRate,
+  fetchChurnRisk,
+  fetchFailedPayments,
+  fetchMrr,
+  fetchMrrSeries,
+  fetchSignups30d,
+} from '@/lib/metrics';
+import { KpiBar } from './_kpi-bar';
+import { MrrChart } from './_mrr-chart';
+import { AlertQueue } from './_alert-queue';
+import { HealthTiles } from './_health-tiles';
 
-export default function DashboardPage() {
+export const dynamic = 'force-dynamic';
+
+export default async function DashboardPage() {
+  const [mrr, active, signups, conv, churn, failed, mrrSeries] = await Promise.all([
+    fetchMrr(),
+    fetchActiveOrgs(),
+    fetchSignups30d(),
+    fetchCalfToCowRate(),
+    fetchChurnRisk(),
+    fetchFailedPayments(),
+    fetchMrrSeries(),
+  ]);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
-        <Eyebrow>{'// PHASE A SCAFFOLD'}</Eyebrow>
+        <Eyebrow>{'// DASHBOARD'}</Eyebrow>
         <h1
           style={{
             fontFamily: "'Black Han Sans', sans-serif",
@@ -15,15 +38,21 @@ export default function DashboardPage() {
             textTransform: 'uppercase',
           }}
         >
-          Dashboard
+          Operations
         </h1>
       </div>
-      <Card style={{ padding: 24 }}>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: BRAND.charcoal }}>
-          Phase A scaffold. KPI bar, MRR chart, alert queue, health tiles wired in Phase D.
-          See <code>docs/superpowers/plans/2026-05-06-phase-a-scaffold.md</code>.
-        </p>
-      </Card>
+      <KpiBar kpis={[mrr, active, signups, conv, churn, failed]} />
+      <MrrChart series={mrrSeries} />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div>
+          <Eyebrow>{'// ALERTS'}</Eyebrow>
+          <AlertQueue />
+        </div>
+        <div>
+          <Eyebrow>{'// PLATFORM HEALTH'}</Eyebrow>
+          <HealthTiles />
+        </div>
+      </div>
     </div>
   );
 }

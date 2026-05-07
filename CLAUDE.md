@@ -78,6 +78,8 @@ Supabase is the single source of truth for all data. Migrations live in `supabas
 
 **Seed data** is not in migrations. Run `npm run seed:ingest` with the `SEED_*_CSV` env vars set (see `supabase/seed/README.md`).
 
+**Reference data publish flow (Phase B.2):** edits go through `rate_card_drafts` (a draft row holds the proposed `draft_payload` + `validation_result`). On publish, `lib/reference-publish.ts` supersedes prior live rows for each business key (sets `effective_to = effective_from - 1`) and inserts the new rows, then RPC-calls `public.refresh_mv_org_cost_summary()` (a stub function in this repo that no-ops if the MV doesn't yet exist; user-portal repo overwrites with the real refresh). All mutating routes live under `app/api/admin/reference/[table]/*` and call `getAdminContext` for actor identity + `logAudit` on success.
+
 ## Companion documents
 
 - `admin handoff v1(1).md` — primary spec. Brand tokens, schema, API contracts, build phases.

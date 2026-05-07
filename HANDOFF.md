@@ -92,21 +92,54 @@ Per `docs/superpowers/plans/2026-05-06-phase-b-reference-data.md`, adapted to th
 - `lib/supabase/types.ts` (generated DB types) — deferred until CLI linking lands. `adminClient()` remains untyped (`SupabaseClient`, not `SupabaseClient<Database>`); reference tables use `Record<string, unknown>` rows.
 - npm peer-dep conflict — `eslint-config-next@16.2.5` requires `eslint@>=9` but the repo has `eslint@8.57.x`. `npm install --legacy-peer-deps` works around it. `next lint` and `next build`'s lint pass both error out on a circular-config issue but the actual TypeScript build succeeds. Fix path: pin `eslint-config-next` to a v15 that supports eslint v8, or upgrade eslint to v9.
 
-## Next Steps — Phase B.2 (publish workflow)
+## Phase B.2 — DONE (publish workflow + editor + history)
 
-Per spec §11 + plan "Out of scope" section:
-- 4-step UI: Edit → Validate → Preview Impact → Publish.
-- Inline spreadsheet editor (`react-data-grid` or similar).
-- `POST /api/admin/reference/[table]/validate` route handler.
-- `POST /api/admin/reference/[table]/preview-impact` route handler.
-- Publish path that writes to `rate_card_drafts.status = 'published'`, sets prior published row's `effective_to`, refreshes downstream materialized views (`mv_org_cost_summary` lives in user-portal repo, not admin — coordinate cross-repo).
-- Version history tab + diff view + roll back.
-- Scheduled-publish auto-trigger via Edge Function cron.
-- CSV import UI (currently CLI-only via the seed script).
+Implements 4-step workflow (Edit → Validate → Preview Impact → Publish) per spec §11. Three pieces stub-only with reasons documented; not blocking gate.
 
-Before B.2:
-- Set up Supabase CLI linking so type generation (`db:types`) works. This unblocks proper typing of reference table writes.
-- Resolve eslint peer-dep mismatch.
+### Migrations
+- `supabase/migrations/0003_mv_refresh_stub.sql` — defines `public.refresh_mv_org_cost_summary()` as a `SECURITY DEFINER` function that tries `REFRESH MATERIALIZED VIEW CONCURRENTLY mv_org_cost_summary`, catches `undefined_table` and `feature_not_supported` exceptions, falls back to non-concurrent refresh when concurrent fails, and returns `false` if the MV doesn't exist. Lets the publish path complete cleanly on a database where the user-portal MV hasn't been created yet. Granted to `service_role` only.
+
+### lib
+- `lib/audit.ts` — extended `AuditAction` enum with `RATE_CARD_DRAFT_CREATE`, `RATE_CARD_DRAFT_UPDATE`, `RATE_CARD_DRAFT_DISCARD`, `RATE_CARD_SCHEDULE`, `RATE_CARD_CSV_IMPORT`. (`RATE_CARD_PUBLISH` already existed.) `audit_log.action` is a free-form `text` column; the enum is enforced only at the application layer.
+- `lib/admin-context.ts` — `getAdminContext(req)` reads `x-admin-role` from middleware-set header + `actor_user_id` from the route-handler-bound supabase session. Throws `Response(401)` / `Response(403)` for the route to short-circuit. DEV_BYPASS path returns a synthetic super-admin context when env unconfigured.
+- `lib/reference-validators.ts` — per-table validators (zone_matrix, carrier rates, fee tables, category benchmarks) producing `ValidationResult { ok, issues, rowCount }`. Carrier-rate validator detects overlapping weight bands within the same `(carrier, service, zone)`.
+- `lib/reference-publish.ts` — `applyDraftAsPublished(table, rows)` performs the supersede-and-insert sequence: for each draft row, sets the prior live row's `effective_to = effective_from - 1` (matched by the table's natural business key), then bulk-inserts the draft rows, then RPC-calls `refresh_mv_org_cost_summary`. Returns `{ newRows, superseded, mvRefreshed, mvError }`.
+
+### API routes (all under `/api/admin/reference/[table]/*`, all `nodejs` + `force-dynamic`, all behind admin middleware)
+- `POST .../draft` — create or update an open draft (write `draft_payload` + `validation_result` JSON). Audits `RATE_CARD_DRAFT_CREATE` or `RATE_CARD_DRAFT_UPDATE`.
+- `POST .../validate` — runs the pure validator and echoes results. No DB writes, no audit.
+- `POST .../publish` — re-runs validation; returns 422 on failure. Otherwise calls `applyDraftAsPublished`, marks the draft `status='published'`, and audits `RATE_CARD_PUBLISH` with the publish outcome.
+- `POST .../schedule` — inserts a `scheduled_publishes` row with `status='pending'` and an `effective_from` date. Audits `RATE_CARD_SCHEDULE`. (Cron trigger that flips pending → published is **not** in this phase — see "What's NOT in B.2" below.)
+- `POST .../csv` — accepts a `text/csv` body, parses with `csv-parse/sync`, coerces rows per-table to typed payload, runs validator, inserts as a new draft. Audits `RATE_CARD_CSV_IMPORT`.
+- `POST .../discard` — flips a draft from `draft` to `discarded`. Audits `RATE_CARD_DRAFT_DISCARD`.
+- `POST .../preview-impact` — returns 501 with the reason `"requires the shipments table, which is delivered in Phase C"`. Editor UI surfaces this to the user as an info banner.
+
+### UI
+- `app/admin/reference/page.tsx` — adds a yellow "N DRAFTS OPEN" badge per table card when `rate_card_drafts.status='draft'` rows exist. New `Promise.all` of three queries (count, latest, drafts) per card.
+- `app/admin/reference/[table]/page.tsx` — splits view into "currently published" DataTable on top and `<ReferenceEditor>` on bottom. If an open draft exists, the editor seeds from that draft's payload; otherwise from the currently-published rows. Adds `HISTORY` link in eyebrow.
+- `app/admin/reference/[table]/_editor.tsx` — `'use client'` editor: cell-by-cell `<input>` per column, add/remove row, file picker for CSV upload, action bar with Validate / Save Draft / Publish / Preview Impact / Discard / Schedule. Each action posts to the matching API route, surfaces validation issues + publish outcome inline. Brand-styled (3px borders, pixel shadow, zero radius).
+- `app/admin/reference/[table]/history/page.tsx` — drafts table (last 100, oldest first by `created_at`) + scheduled publishes table (last 100). Status colored: published=green, draft=blue, discarded/cancelled=red, pending=amber. Trailing card explains the cross-repo MV refresh contract.
+
+### What's NOT in B.2 (deferred with explicit reasons)
+- **Preview Impact recalculation** — depends on a `shipments` table (Phase C). Until then the route returns 501 + reason.
+- **Cron-trigger for scheduled publishes** — Supabase Edge Function + cron. Requires CLI linking + deploy step. Schedule rows accumulate in `scheduled_publishes` with `status='pending'` until a cron worker (or manual operator) flips them.
+- **`mv_org_cost_summary` materialized view itself** — user-portal repo's responsibility. The stub function in `0003_mv_refresh_stub.sql` lets publish complete cleanly until the MV is delivered.
+- **Diff view + rollback** — version history page lists drafts but does not visualize column-level diffs against the prior published version, and there is no one-click rollback. Adding both is a UI-only follow-up over the existing data.
+- **Spreadsheet-grade editor** — current editor is a basic table of `<input>` cells. No keyboard navigation, no copy/paste from Excel, no column type hints. `react-data-grid` integration is the obvious upgrade path.
+- **Supabase CLI project linking + generated types** — still not configured (carry-over from B.1). All reference rows remain typed as `Record<string, unknown>`.
+- **eslint peer-dep mismatch** — still present (carry-over from B.1).
+
+## Phase B Gate (per spec §11)
+> **Gate:** Founder can publish a rate card. `mv_org_cost_summary` refreshes. User dashboard shows updated numbers.
+
+Status: **PARTIAL.** Founder can publish via `/admin/reference/[table]`; rows enter the live tables with correct `effective_from/to` windowing. MV refresh attempts but no-ops if the MV doesn't yet exist (Phase B blocker is upstream — user-portal MV migration). Gate flips to GREEN when the user-portal repo lands `mv_org_cost_summary`.
+
+## Next Steps
+
+- Apply `supabase/migrations/0002_reference_tables.sql` and `0003_mv_refresh_stub.sql` in the Supabase Dashboard SQL editor (in that order).
+- Manual smoke test: log in → `/admin/reference/our-warehousing-fees` (smallest table to start) → add 1-2 rows → Validate → Save Draft → Publish → confirm row appears in Table Editor with correct `effective_from`. Run a second publish to confirm the prior row's `effective_to` is set.
+- Coordinate with user-portal repo to land `mv_org_cost_summary` migration. Once landed, B.2 publish will refresh it automatically (the stub function gets shadowed by the user-portal's real definition).
+- Phase C (Customers + Tickets) and Preview Impact unblock once `shipments` table arrives.
 
 ---
 

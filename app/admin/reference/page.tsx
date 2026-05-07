@@ -11,22 +11,33 @@ export const dynamic = 'force-dynamic';
 type RowStat = {
   count: number;
   lastUpdated: string | null;
+  draftCount: number;
   error: string | null;
 };
 
 async function fetchStats(meta: ReferenceTableMeta): Promise<RowStat> {
   try {
     const supabase = adminClient();
-    const [countRes, latestRes] = await Promise.all([
+    const [countRes, latestRes, draftsRes] = await Promise.all([
       supabase.from(meta.table).select('*', { count: 'exact', head: true }),
       supabase
         .from(meta.table)
         .select('effective_from')
         .order('effective_from', { ascending: false })
         .limit(1),
+      supabase
+        .from('rate_card_drafts')
+        .select('*', { count: 'exact', head: true })
+        .eq('table_name', meta.table)
+        .eq('status', 'draft'),
     ]);
     if (countRes.error) {
-      return { count: 0, lastUpdated: null, error: countRes.error.message };
+      return {
+        count: 0,
+        lastUpdated: null,
+        draftCount: 0,
+        error: countRes.error.message,
+      };
     }
     const latestRow = latestRes.data?.[0] as
       | { effective_from?: string }
@@ -34,12 +45,14 @@ async function fetchStats(meta: ReferenceTableMeta): Promise<RowStat> {
     return {
       count: countRes.count ?? 0,
       lastUpdated: latestRow?.effective_from ?? null,
+      draftCount: draftsRes.count ?? 0,
       error: null,
     };
   } catch (ex) {
     return {
       count: 0,
       lastUpdated: null,
+      draftCount: 0,
       error: ex instanceof Error ? ex.message : 'Unknown error',
     };
   }
@@ -167,6 +180,23 @@ export default async function ReferencePage() {
                         : 'NO DATA'}
                   </span>
                 </div>
+                {s.draftCount > 0 ? (
+                  <div
+                    style={{
+                      marginTop: 10,
+                      padding: '4px 8px',
+                      background: BRAND.yellow,
+                      border: `2px solid ${BRAND.charcoal}`,
+                      fontFamily: "'Press Start 2P', monospace",
+                      fontSize: 8,
+                      color: BRAND.charcoal,
+                      letterSpacing: '0.04em',
+                      display: 'inline-block',
+                    }}
+                  >
+                    {s.draftCount} DRAFT{s.draftCount === 1 ? '' : 'S'} OPEN
+                  </div>
+                ) : null}
               </Card>
             </Link>
           );

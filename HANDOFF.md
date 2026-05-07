@@ -1,12 +1,118 @@
 # HANDOFF — ShippingCow Admin Portal
 
 Last updated: 2026-05-07
-Branch: `master` @ `8159399` (pushed to `origin/master`)
+Branch: `master` @ `aafca00` (pushed to `origin/master`)
 Repo: https://github.com/shippingcow/ShippingCowAdmin (private)
 
 ---
 
-## Goal
+## STATUS: All 5 phases code-complete
+
+| Phase | Commit | Code status | Gate status |
+|---|---|---|---|
+| A.1 — scaffold + auth middleware + audit log | `8159399` | DONE | — |
+| A.2 — login form + TOTP enrollment UI | `298c4c1` | DONE | GREEN |
+| B.1 — reference data schema + read-only UI | `9801128` | DONE | — |
+| B.2 — rate card editor + publish workflow | `3e4e8d0` | DONE | AMBER (MV cross-repo) |
+| C — customers + tickets | `2b105f0` | DONE | AMBER (cross-repo email/banner) |
+| D — revenue + dashboard | `aea54f7` | DONE | AMBER (Stripe key not set) |
+| E — platform + audit + security | `aafca00` | DONE | GREEN |
+
+**Total:** 5 migrations, ~50 routes (incl. 27 mutating API routes), all under admin middleware + MFA + audit logging.
+
+---
+
+## ▶ HUMAN TASKS — RUN THESE IN ORDER
+
+The code is fully built locally + pushed. Now run these to bring the live system in line. **Each task is independent** — you can do them one at a time, in any order, except the migrations (apply in order).
+
+### 1. Apply 4 SQL migrations via Supabase Dashboard SQL editor
+
+In order. Each is idempotent (safe to re-run).
+
+```
+supabase/migrations/0002_reference_tables.sql      ← Phase B.1
+supabase/migrations/0003_mv_refresh_stub.sql       ← Phase B.2
+supabase/migrations/0004_customers_tickets.sql     ← Phase C
+supabase/migrations/0005_platform_security.sql     ← Phase E
+```
+
+(`0001_phase_a.sql` was applied during A.1.)
+
+For each file: open in your editor, copy contents, paste into Supabase Dashboard → SQL Editor → New query → Run. Then verify Table Editor shows the new tables.
+
+After all four:
+- New tables: `zone_matrix, our_carrier_rates, carrier_retail_rates, our_warehousing_fees, our_logistics_fees, category_benchmarks, rate_card_drafts, scheduled_publishes, admin_notes, impersonation_sessions, support_tickets, ticket_messages, feature_flags, model_pins`.
+- New function: `public.refresh_mv_org_cost_summary()`.
+- Conditional ALTERs hit `subscriptions, orgs, news_items` only if those tables exist (user-portal-owned). If they don't exist yet, the ALTER block prints `RAISE NOTICE` and skips — that's expected.
+- One seeded row: `feature_flags.flag_key='mooovy_enabled'` set to default_enabled=true.
+
+### 2. (Optional) Set Stripe key for live billing actions
+
+If you want `/admin/revenue` failed-payment-queue actions (Retry, Refund, Cancel, Coupon) to work:
+
+```bash
+# in .env.local
+STRIPE_SECRET_KEY=sk_live_...
+```
+
+Without it, the four billing routes return HTTP 503 with `"STRIPE_SECRET_KEY not set; billing actions are disabled."` — that's by design.
+
+### 3. Seed reference data (optional, for B.1/B.2 testing)
+
+If you have CSVs:
+
+```bash
+# in shell or .env.local — these are read by the seed script
+SEED_ZONE_MATRIX_CSV=...
+SEED_OUR_CARRIER_RATES_CSV=...
+SEED_CARRIER_RETAIL_RATES_CSV=...
+SEED_WAREHOUSING_FEES_CSV=...
+SEED_LOGISTICS_FEES_CSV=...
+SEED_CATEGORY_BENCHMARKS_CSV=...
+SEED_EFFECTIVE_FROM=2026-05-07
+
+npm run seed:ingest
+```
+
+Or skip and seed via the `/admin/reference/[table]` editor UI directly (smaller tables only — zone_matrix at ~42k rows wants the CSV path).
+
+### 4. Smoke tests — run `npm run dev` once, exercise each section
+
+```bash
+npm run dev   # http://localhost:3001
+```
+
+Log in with founder TOTP (was set up during A.2 smoke test). Go through each section:
+
+| Path | Smoke test |
+|---|---|
+| `/admin` | KPI bar shows 6 cells. Cells render `—` if upstream tables missing — that's degraded, not broken. MRR sparkline shows "No data yet" or a chart. Alert queue + health tiles render. |
+| `/admin/customers` | Org list. If user-portal `orgs/subscriptions/org_members` are not migrated, expect "Upstream tables missing" amber card — that's degraded, not broken. |
+| `/admin/customers/<orgId>` | If you have at least one org, click into it → drawer with 5 tabs + 5 quick-action buttons. Suspend → reactivate roundtrip. Tier override (super-admin only). Add admin note. |
+| `/admin/revenue` | New-MRR sparkline + funnel + failed-payment queue. Funnel labelled "degraded" if `subscription_events` table absent. |
+| `/admin/reference` | 6 cards with row counts + last effective date. "N DRAFTS OPEN" badge if you started any drafts. |
+| `/admin/reference/our-warehousing-fees` | Smallest table — easiest to test the publish flow. Add row → Validate → Save Draft → Publish → confirm row in Table Editor with `effective_from` set. Publish a second time with later `effective_from` → expect "Superseded 1". MV refresh shows "skipped (no MV)" because user-portal hasn't created `mv_org_cost_summary` yet — by design. |
+| `/admin/reference/<slug>/history` | Shows draft + scheduled publish lists. |
+| `/admin/platform` | Tabs for Flags, Kill switch, Model pins, News queue, Quotas. Create a flag, toggle, edit, delete. |
+| `/admin/audit` | Filterable list. Create some mutations elsewhere (publish a rate card, suspend an org) and verify entries appear here. Click "SHOW DIFF" — expand before/after JSON. Click "EXPORT CSV" — downloads. |
+| `/admin/security` | Admin list (deactivate yourself? don't). Suspicious-sessions degrades to "no data" if `user_sessions` table missing. CCPA form: type a real org id → Preview cascade → see counts → type "ERASE <name>" → execute (destructive — only do this on a test org). |
+| `/admin/tickets` | Split-pane. If `support_tickets` table empty, list shows "No tickets". Insert a row via SQL editor manually if you want to exercise reply/status/priority/assign. |
+
+### 5. Cross-repo follow-ups (NOT in this repo)
+
+These items belong to the user-portal repo (`apps/web`) or external integrations:
+
+- **Impersonation amber banner** — when admin clicks Impersonate on a customer drawer, this admin portal generates an `impersonation_sessions` row + redirects to `${USER_PORTAL_URL}/impersonate?session=<id>`. The user-portal middleware needs to detect that `?session=` param, look up the session, mount it as the user's session, and render an amber "Admin session active — expires in N min" banner.
+- **`mv_org_cost_summary` materialized view** — needs to be created in the user-portal repo's Supabase migrations. Once created, the `refresh_mv_org_cost_summary()` stub function this repo installed will Just Work — no further code change here.
+- **Email notifications on admin ticket reply** — needs Resend (or similar) wired up in the admin portal's `tickets/reply` route. RESEND_API_KEY env var. Deferred.
+- **`apps/web` ticket submission form** — user-side. Inserts into `support_tickets` + `ticket_messages`.
+- **Cron-triggered scheduled publishes** — Supabase Edge Function on a 1-hour cron that scans `scheduled_publishes WHERE status='pending' AND effective_from <= today`, calls the publish path, flips status. Deferred (CLI link not configured).
+- **Suspicious-session detection upstream** — user-portal must populate `user_sessions(user_id, ip, country, city, latitude, longitude, created_at)` on each login.
+
+---
+
+## Goal (original)
 
 Ship Phase A of the ShippingCow Admin Portal per `admin handoff v1(1).md` §11.
 Phase A gate: founder logs into `/admin`, sees sidebar, non-admin blocked at `/403`, audit log table exists.

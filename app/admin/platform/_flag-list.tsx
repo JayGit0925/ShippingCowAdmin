@@ -65,7 +65,7 @@ export function FlagList({ flags }: { flags: FeatureFlag[] }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <Card style={{ padding: 14 }}>
-        <Eyebrow>// NEW FLAG</Eyebrow>
+        <Eyebrow>{'// NEW FLAG'}</Eyebrow>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 6 }}>
           <input
             placeholder="snake_case_key"

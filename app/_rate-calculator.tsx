@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { BRAND, FONT, px } from '@/lib/brand';
 
+const TILE_RED_BG = '#fff5f5';
+const TILE_GREEN_BG = '#f0faf4';
+
 const RATES = {
   zoneRatePerLb: [0, 0.21, 0.21, 0.26, 0.31, 0.37, 0.44, 0.50, 0.56] as const,
   standardDimMultiplier: 2.0,
@@ -88,7 +91,7 @@ export default function RateCalculator() {
           />
         </div>
         <div>
-          <label style={labelStyle}>DESTINATION ZONE (1–8)</label>
+          <label style={labelStyle}>DESTINATION ZONE (2–8)</label>
           <select
             value={zone}
             onChange={(e) => setZone(Number(e.target.value))}
@@ -118,7 +121,7 @@ export default function RateCalculator() {
           style={{
             border: `2px solid ${BRAND.charcoal}`,
             padding: '16px 20px',
-            background: '#fff5f5',
+            background: TILE_RED_BG,
           }}
         >
           <span
@@ -150,7 +153,7 @@ export default function RateCalculator() {
           style={{
             border: `2px solid ${BRAND.charcoal}`,
             padding: '16px 20px',
-            background: '#f0faf4',
+            background: TILE_GREEN_BG,
           }}
         >
           <span

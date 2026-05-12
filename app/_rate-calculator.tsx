@@ -204,6 +204,7 @@ export default function RateCalculator() {
               fontFamily: FONT.display,
               fontSize: 32,
               display: 'block',
+              color: BRAND.white,
             }}
           >
             ~${est.savings}

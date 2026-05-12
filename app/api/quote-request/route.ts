@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
-  const body = await request.json() as {
+  let body: {
     name: string;
     company?: string;
     email: string;
@@ -10,6 +10,12 @@ export async function POST(request: Request) {
     weight_lbs?: number;
     origin_zip?: string;
   };
+
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'invalid JSON body' }, { status: 400 });
+  }
 
   if (!body.name?.trim() || !body.email?.trim()) {
     return NextResponse.json({ error: 'name and email required' }, { status: 400 });

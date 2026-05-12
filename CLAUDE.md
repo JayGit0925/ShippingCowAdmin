@@ -49,7 +49,7 @@ If you find yourself importing `adminClient` in a `'use client'` file, stop. The
 ## Conventions
 
 - File names lowercase-kebab. Component exports PascalCase.
-- **Validate before publishing:** Any rate, savings number, or DIM claim on a public page must be confirmed against real rate data before the page is promoted or DMs go out. Edit `RATES` in `app/_rate-calculator.tsx` and hero copy in `app/page.tsx` as the source of truth.
+- **Validate before publishing:** Any rate, savings number, or DIM claim on a public page must be confirmed against real rate data before the page is promoted or DMs go out. Edit `RATES` in `lib/rate-calc.ts` (the source of truth — shared by UI and audit scripts) and hero copy in `app/page.tsx`.
 - TS strict mode, no `any`, no `// @ts-expect-error` without comment explaining why.
 - Server components default. Use `'use client'` only when you need state, effects, or browser APIs.
 - Inline `style={{...}}` is fine and matches the prototype. Tailwind utility classes are also fine. Don't mix on the same element.

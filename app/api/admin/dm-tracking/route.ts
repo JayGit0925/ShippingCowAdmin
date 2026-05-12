@@ -37,6 +37,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'prospect_name required' }, { status: 400 });
   }
 
+  if (body.reply_tone && !['positive', 'neutral', 'negative'].includes(body.reply_tone)) {
+    return NextResponse.json({ error: 'invalid reply_tone' }, { status: 400 });
+  }
+
   const supabase = adminClient();
   const { error } = await supabase.from('dm_tracking').insert({
     prospect_name: body.prospect_name.trim(),
@@ -45,6 +49,9 @@ export async function POST(request: Request) {
     notes: body.notes?.trim() ?? null,
   });
 
-  if (error) return NextResponse.json({ error: 'insert failed' }, { status: 500 });
+  if (error) {
+    console.error('dm_tracking insert error:', error);
+    return NextResponse.json({ error: 'insert failed' }, { status: 500 });
+  }
   return NextResponse.json({ ok: true });
 }

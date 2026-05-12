@@ -15,7 +15,9 @@ export interface RateEstimate {
 }
 
 export function calcEstimates(weightLbs: number, zone: number): RateEstimate {
-  const rate = (RATES.zoneRatePerLb as readonly number[])[zone] ?? 0.37;
+  const rate = zone >= 0 && zone < RATES.zoneRatePerLb.length
+    ? RATES.zoneRatePerLb[zone]
+    : 0.37;
   const stdBilled = Math.max(weightLbs, weightLbs * RATES.standardDimMultiplier);
   const scBilled = Math.max(weightLbs, weightLbs * RATES.shippingcowDimMultiplier);
   const stdBase = stdBilled * rate;

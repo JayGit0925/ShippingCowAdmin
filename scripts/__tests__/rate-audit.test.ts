@@ -22,4 +22,9 @@ describe('calcEstimates', () => {
     const { standard, shippingcow, savings } = calcEstimates(90, 6);
     expect(Math.abs(savings - (standard - shippingcow))).toBeLessThanOrEqual(1);
   });
+
+  it('out-of-range zone falls back to 0.37 rate (zone 5 rate)', () => {
+    // zone 9 is out of range; fallback rate is 0.37, same as zone 5
+    expect(calcEstimates(50, 9)).toEqual(calcEstimates(50, 5));
+  });
 });

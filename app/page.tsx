@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { BRAND, px, FONT } from '@/lib/brand';
+import { BRAND, px, pxSm, FONT } from '@/lib/brand';
 import RateCalculator from './_rate-calculator';
 
 const S = {
@@ -30,6 +30,7 @@ const S = {
     color: BRAND.charcoal,
     background: BRAND.yellow,
     border: `3px solid ${BRAND.charcoal}`,
+    boxShadow: pxSm(),
     padding: '8px 12px',
     textDecoration: 'none',
     display: 'inline-block',

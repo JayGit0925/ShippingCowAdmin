@@ -25,12 +25,6 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/403', req.url));
   }
 
-  const { data: factors } = await supabase.auth.mfa.listFactors();
-  const hasTotp = (factors?.totp ?? []).length > 0;
-  if (!hasTotp && !req.nextUrl.pathname.startsWith('/admin/setup-mfa')) {
-    return NextResponse.redirect(new URL('/admin/setup-mfa', req.url));
-  }
-
   res.headers.set('x-admin-role', admin.role);
   return res;
 }

@@ -46,13 +46,13 @@ export default async function DmTrackerPage() {
         </p>
       </div>
 
-      <div style={{ border: `2px solid ${BRAND.charcoal}`, padding: 24, background: BRAND.white, maxWidth: 640 }}>
+      <div style={{ border: `3px solid ${BRAND.charcoal}`, padding: 24, background: BRAND.white, maxWidth: 640 }}>
         <p style={{ fontFamily: FONT.pixel, fontSize: 9, opacity: 0.5, marginBottom: 16, letterSpacing: '0.04em' }}>LOG A REPLY</p>
         <AddReplyForm />
       </div>
 
       {replies.length > 0 && (
-        <div style={{ border: `2px solid ${BRAND.charcoal}`, background: BRAND.white }}>
+        <div style={{ border: `3px solid ${BRAND.charcoal}`, background: BRAND.white }}>
           <p style={{ fontFamily: FONT.pixel, fontSize: 9, opacity: 0.5, margin: '16px 16px 8px', letterSpacing: '0.04em' }}>
             REPLIES ({count})
           </p>

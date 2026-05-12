@@ -171,7 +171,7 @@ const S = {
   featCard: {
     background: BRAND.pageBed,
     border: `3px solid ${BRAND.charcoal}`,
-    boxShadow: '4px 4px 0 #1A202C',
+    boxShadow: px(),
     padding: 32,
     display: 'flex',
     flexDirection: 'column',
@@ -207,7 +207,7 @@ const S = {
   featDark: {
     background: BRAND.charcoal,
     border: `3px solid ${BRAND.charcoal}`,
-    boxShadow: '4px 4px 0 #1A202C',
+    boxShadow: px(),
     padding: 40,
   } satisfies CSSProperties,
 

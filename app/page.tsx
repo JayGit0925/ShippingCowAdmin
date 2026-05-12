@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { BRAND, px, pxSm, FONT } from '@/lib/brand';
 import RateCalculator from './_rate-calculator';
+import QuoteForm from './_quote-form';
 
 const S = {
   nav: {
@@ -238,6 +239,25 @@ const S = {
     margin: 0,
     maxWidth: 640,
   } satisfies CSSProperties,
+
+  eyebrow: {
+    fontFamily: FONT.pixel,
+    fontSize: 9,
+    color: BRAND.charcoal,
+    opacity: 0.5,
+    letterSpacing: '0.08em',
+    marginBottom: 16,
+    display: 'block',
+  } satisfies CSSProperties,
+
+  sectionH2: {
+    fontFamily: FONT.display,
+    fontSize: 'clamp(1.6rem, 4vw, 2.4rem)',
+    color: BRAND.charcoal,
+    textTransform: 'uppercase',
+    lineHeight: 1.1,
+    margin: '0 0 16px',
+  } satisfies CSSProperties,
 } as const;
 
 export default function LandingPage() {
@@ -352,8 +372,20 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Quote placeholder */}
-      <div id="quote" />
+      {/* Quote form */}
+      <section id="quote" style={{ padding: '64px 24px', background: BRAND.white }}>
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <span style={S.eyebrow}>{'// Get Exact Rates'}</span>
+          <h2 style={S.sectionH2}>
+            Get your actual rate.
+          </h2>
+          <p style={{ fontSize: 15, opacity: 0.65, marginBottom: 32, maxWidth: 520, lineHeight: 1.7, fontFamily: "'DM Sans', sans-serif" }}>
+            Send us your item type, weight, and origin zip.
+            We&apos;ll reply within 24 hours with your all-in rate — fuel, residential, and handling included.
+          </p>
+          <QuoteForm />
+        </div>
+      </section>
 
       {/* Footer */}
       <footer style={S.footer}>

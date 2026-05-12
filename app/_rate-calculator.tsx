@@ -11,7 +11,7 @@ const RATES = {
   standardDimMultiplier: 2.0,
   shippingcowDimMultiplier: 1.25,
   standardResidential: 5.85,
-  shippingcowResidential: 1.17,
+  shippingcowResidential: 2.34,
   standardFuelPct: 0.13,
   shippingcowFuelPct: 0,
 };

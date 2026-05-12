@@ -6,19 +6,19 @@ One-stop reference. Every link, command, and code block you need — in order. C
 
 ## Quick links
 
-| What | URL |
-|---|---|
-| Live landing page | https://shippingcow-admin.vercel.app |
-| Vercel project dashboard | https://vercel.com/jiaweli0521-1285s-projects/shippingcow-admin |
-| Vercel env vars | https://vercel.com/jiaweli0521-1285s-projects/shippingcow-admin/settings/environment-variables |
-| Supabase SQL editor | https://supabase.com/dashboard/project/aetvueyuaxbgszcisoci/sql |
-| Supabase table editor | https://supabase.com/dashboard/project/aetvueyuaxbgszcisoci/editor |
-| Supabase auth providers | https://supabase.com/dashboard/project/aetvueyuaxbgszcisoci/auth/providers |
-| GCP OAuth credentials | https://console.cloud.google.com/apis/credentials |
-| LinkedIn | https://www.linkedin.com/messaging |
-| Meetup NYC | https://www.meetup.com/find/?location=New+York--NY&keywords=shopify+ecommerce |
-| Eventbrite NYC | https://www.eventbrite.com/d/ny--new-york/shopify-ecommerce |
-| Admin portal login | https://shippingcow-admin.vercel.app/login |
+| What                     | URL                                                                                            |
+| ------------------------ | ---------------------------------------------------------------------------------------------- |
+| Live landing page        | https://shippingcow-admin.vercel.app                                                           |
+| Vercel project dashboard | https://vercel.com/jiaweli0521-1285s-projects/shippingcow-admin                                |
+| Vercel env vars          | https://vercel.com/jiaweli0521-1285s-projects/shippingcow-admin/settings/environment-variables |
+| Supabase SQL editor      | https://supabase.com/dashboard/project/aetvueyuaxbgszcisoci/sql                                |
+| Supabase table editor    | https://supabase.com/dashboard/project/aetvueyuaxbgszcisoci/editor                             |
+| Supabase auth providers  | https://supabase.com/dashboard/project/aetvueyuaxbgszcisoci/auth/providers                     |
+| GCP OAuth credentials    | https://console.cloud.google.com/apis/credentials                                              |
+| LinkedIn                 | https://www.linkedin.com/messaging                                                             |
+| Meetup NYC               | https://www.meetup.com/find/?location=New+York--NY&keywords=shopify+ecommerce                  |
+| Eventbrite NYC           | https://www.eventbrite.com/d/ny--new-york/shopify-ecommerce                                    |
+| Admin portal login       | https://shippingcow-admin.vercel.app/login                                                     |
 
 ---
 
@@ -134,8 +134,8 @@ const RATES = {
   standardResidential: 5.85,
   // FedEx/UPS residential surcharge per package (~$5.85 list rate).
 
-  shippingcowResidential: 1.17,
-  // 80% off residential: $5.85 × 0.20 = $1.17.
+  shippingcowResidential: 2.34,
+  // 60% off residential: $5.85 × 0..4 = $2.34.
 
   standardFuelPct: 0.13,
   // Standard carrier fuel surcharge: ~13% of base rate.

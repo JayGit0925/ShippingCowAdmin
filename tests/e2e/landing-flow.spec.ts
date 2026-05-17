@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('landing → quote → submitted', async ({ page }) => {
-  await page.goto('http://localhost:3001/');
+  await page.goto('http://localhost:3001/launch');
   await expect(page.getByText(/LIVE — \d+ SELLERS/)).toBeVisible();
 
   await page.locator('input[name="name"]').fill('E2E Test');

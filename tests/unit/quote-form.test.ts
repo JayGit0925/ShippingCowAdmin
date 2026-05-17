@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildQuotePayload } from '@/app/_quote-form.utils';
+import { buildQuotePayload } from '@/app/launch/_quote-form.utils';
 
 describe('buildQuotePayload', () => {
   it('includes only name + email when optionals are blank', () => {

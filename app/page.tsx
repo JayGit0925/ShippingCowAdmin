@@ -7,6 +7,11 @@ import QuoteForm from './_quote-form';
 // ── Editable constant — shown in live badge ──────────────────────────────────
 const SELLERS_AUDITED_THIS_WEEK = 14;
 
+// ── Browser-frame chrome (mockup-only; not part of the brand palette) ────────
+const FRAME_DARK_1 = '#1a2540';  // chrome bg
+const FRAME_DARK_2 = '#2a3a5c';  // chrome border
+const FRAME_DARK_3 = '#223458';  // chrome accent
+
 const S = {
   // --- Hero (v2 port) ---
   hero: {
@@ -203,13 +208,6 @@ const S = {
     margin: '0 0 16px',
   } satisfies CSSProperties,
 
-  qChoicesGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: 8,
-    marginBottom: 12,
-  } satisfies CSSProperties,
-
   qChoiceBtn: {
     fontFamily: FONT.body,
     fontSize: 13,
@@ -360,7 +358,7 @@ const S = {
     fontFamily: FONT.body,
     fontSize: 13,
     color: BRAND.white,
-    background: '#223458',
+    background: FRAME_DARK_3,
     border: `2px solid ${BRAND.blue}`,
     padding: '8px 12px',
     lineHeight: 1.55,
@@ -373,7 +371,7 @@ const S = {
     color: BRAND.charcoal,
     background: BRAND.yellow,
     border: `3px solid ${BRAND.charcoal}`,
-    boxShadow: px(BRAND.yellow),
+    boxShadow: px(),
     padding: '13px 18px',
     textDecoration: 'none',
     display: 'inline-block',
@@ -386,11 +384,11 @@ const S = {
     border: `3px solid ${BRAND.charcoal}`,
     boxShadow: px(),
     overflow: 'hidden',
-    background: '#1a2540',
+    background: FRAME_DARK_1,
   } satisfies CSSProperties,
 
   browserBar: {
-    background: '#2a3a5c',
+    background: FRAME_DARK_2,
     padding: '8px 12px',
     display: 'flex',
     alignItems: 'center',
@@ -556,15 +554,15 @@ export default function LandingPage() {
               </div>
               <div style={{ borderTop: `2px solid ${BRAND.charcoal}`, opacity: 0.12, margin: '16px 0' }} />
               <div style={S.qInputGroup}>
-                <label style={S.qInputLabel}>FULL NAME *</label>
+                <div style={S.qInputLabel}>FULL NAME *</div>
                 <input type="text" placeholder="Jane Smith" style={S.qInput} readOnly />
               </div>
               <div style={S.qInputGroup}>
-                <label style={S.qInputLabel}>BUSINESS EMAIL *</label>
+                <div style={S.qInputLabel}>BUSINESS EMAIL *</div>
                 <input type="email" placeholder="jane@yourstore.com" style={S.qInput} readOnly />
               </div>
               <div style={S.qInputGroup}>
-                <label style={S.qInputLabel}>MONTHLY SHIPMENTS *</label>
+                <div style={S.qInputLabel}>MONTHLY SHIPMENTS *</div>
                 <input type="text" placeholder="200–2,000 orders/month" style={S.qInput} readOnly />
               </div>
               <a href="#quote" style={S.qSubmitBtn}>
@@ -635,9 +633,9 @@ export default function LandingPage() {
           <div style={S.browserFrame}>
             <div style={S.browserBar}>
               <div style={S.browserDots}>
-                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} />
-                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b' }} />
-                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e' }} />
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: BRAND.red }} />
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: BRAND.amber }} />
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: BRAND.green }} />
               </div>
               <div style={S.browserUrl}>app.shippingcow.ai / mooovy</div>
             </div>
@@ -658,13 +656,13 @@ export default function LandingPage() {
                 gap: 10,
               }}>
                 {[
-                  { label: 'Avg Zone (current)', value: '5.57', color: '#ef4444' },
-                  { label: 'Avg Zone (with SC)', value: '3.89', color: '#22c55e' },
-                  { label: 'DIM Overpay/mo', value: '$2,840', color: '#f59e0b' },
+                  { label: 'Avg Zone (current)', value: '5.57', color: BRAND.red },
+                  { label: 'Avg Zone (with SC)', value: '3.89', color: BRAND.green },
+                  { label: 'DIM Overpay/mo', value: '$2,840', color: BRAND.amber },
                   { label: 'Est. Annual Savings', value: '$11,494', color: BRAND.yellow },
                 ].map((stat) => (
                   <div key={stat.label} style={{
-                    background: '#223458',
+                    background: FRAME_DARK_3,
                     border: `2px solid ${BRAND.blue}`,
                     padding: '10px 12px',
                   }}>
@@ -689,7 +687,7 @@ export default function LandingPage() {
                 ))}
               </div>
               <div style={{
-                background: '#223458',
+                background: FRAME_DARK_3,
                 border: `2px solid ${BRAND.blue}`,
                 padding: '12px 14px',
               }}>

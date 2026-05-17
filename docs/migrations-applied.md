@@ -3,6 +3,7 @@
 | Date | Migrations | Method | Project | Applied by |
 |---|---|---|---|---|
 | 2026-05-13 | 0001–0005 | Supabase MCP | aetvueyuaxbgszcisoci / shippingcow-admin-prod (us-east-1) | Claude Code |
+| (applied between 2026-05-13 and 2026-05-16; logged 2026-05-16) | 0006 (quote_requests), 0007 (dm_tracking) | Supabase MCP | aetvueyuaxbgszcisoci | Claude Code — schema verified live via list_tables on 2026-05-16 |
 
 ## Notes
 

@@ -610,7 +610,325 @@ const S = {
     fontWeight: 400,
     whiteSpace: 'nowrap' as const,
   } satisfies CSSProperties,
+
+  // === Testimonials ===
+  // Source: homepage/shipping cow home page(1).html lines 724-738
+  // CSS: .proof, .proof__head, .proof-grid, .proof-card, .proof-stars, .proof-quote, .proof-name, .proof-company
+
+  proofSection: {
+    padding: '5rem 0',
+    background: BRAND.blue,
+  } satisfies CSSProperties,
+
+  proofContainer: {
+    maxWidth: 1240,
+    margin: '0 auto',
+    padding: '0 1.5rem',
+  } satisfies CSSProperties,
+
+  proofHead: {
+    textAlign: 'center' as const,
+    marginBottom: '3rem',
+  } satisfies CSSProperties,
+
+  proofH2: {
+    fontFamily: FONT.display,
+    fontSize: 'clamp(1.8rem, 3.5vw, 2.6rem)',
+    color: BRAND.white,
+    textTransform: 'none' as const,
+    fontWeight: 400,
+  } satisfies CSSProperties,
+
+  // Yellow accent span in proof H2
+  proofH2Accent: {
+    color: BRAND.yellow,
+  } satisfies CSSProperties,
+
+  proofSubP: {
+    color: '#B0C8F0', // verbatim — prototype line 304
+    marginTop: '0.75rem',
+    fontFamily: FONT.body,
+    fontSize: '1rem',
+  } satisfies CSSProperties,
+
+  proofGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '1.5rem',
+  } satisfies CSSProperties,
+
+  proofCard: {
+    background: 'rgba(255,255,255,.08)', // verbatim — prototype line 306
+    border: '3px solid rgba(255,255,255,.2)', // verbatim — prototype line 306
+    padding: '1.8rem',
+    color: BRAND.white,
+  } satisfies CSSProperties,
+
+  proofStars: {
+    color: BRAND.yellow,
+    fontSize: '1.1rem',
+    marginBottom: '0.8rem',
+    letterSpacing: '0.1em',
+    fontFamily: FONT.body,
+  } satisfies CSSProperties,
+
+  proofQuote: {
+    fontSize: '1rem',
+    lineHeight: 1.65,
+    color: '#dbeafe', // verbatim — prototype line 308
+    marginBottom: '1rem',
+    fontStyle: 'italic' as const,
+    fontFamily: FONT.body,
+  } satisfies CSSProperties,
+
+  proofName: {
+    fontFamily: FONT.display,
+    fontSize: '0.9rem',
+    textTransform: 'uppercase' as const,
+    color: BRAND.yellow,
+  } satisfies CSSProperties,
+
+  proofCompany: {
+    fontSize: '0.8rem',
+    color: '#93C5FD', // verbatim — prototype line 310
+    fontFamily: FONT.body,
+  } satisfies CSSProperties,
+
+  // === Services ===
+  // Source: homepage/shipping cow home page(1).html lines 739-756
+  // CSS: .section, .section__head, .services-grid, .service-card, .service-num, .service-tag, .btn.btn--sm
+
+  servicesSection: {
+    padding: '5rem 0',
+  } satisfies CSSProperties,
+
+  servicesGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '1.5rem',
+    marginTop: '2.5rem',
+  } satisfies CSSProperties,
+
+  serviceCard: {
+    background: BRAND.white,
+    border: `3px solid ${BRAND.charcoal}`,
+    padding: '1.8rem',
+    boxShadow: px(),
+    display: 'flex',
+    flexDirection: 'column' as const,
+  } satisfies CSSProperties,
+
+  serviceNum: {
+    fontFamily: FONT.pixel,
+    fontSize: '0.68rem',
+    color: BRAND.blue,
+    display: 'inline-block',
+    padding: '0.2rem 0.5rem',
+    border: `2px solid ${BRAND.blue}`,
+    marginBottom: '0.6rem',
+  } satisfies CSSProperties,
+
+  serviceCardH3: {
+    fontFamily: FONT.display,
+    fontSize: '1.2rem',
+    textTransform: 'uppercase' as const,
+    marginBottom: '0.4rem',
+    fontWeight: 400,
+  } satisfies CSSProperties,
+
+  serviceTag: {
+    fontWeight: 700,
+    fontStyle: 'italic' as const,
+    color: BRAND.blue,
+    marginBottom: '0.8rem',
+    fontSize: '0.95rem',
+    fontFamily: FONT.body,
+  } satisfies CSSProperties,
+
+  serviceCardP: {
+    fontSize: '0.9rem',
+    color: '#3a4454', // verbatim — prototype line 318
+    flex: 1,
+    fontFamily: FONT.body,
+    lineHeight: 1.6,
+  } satisfies CSSProperties,
+
+  // "Get a Quote →" button — yellow bg, dark text, small variant
+  serviceBtnSm: {
+    display: 'inline-block',
+    marginTop: '1.2rem',
+    padding: '0.5rem 1rem',
+    background: BRAND.yellow,
+    color: BRAND.charcoal,
+    fontFamily: FONT.display,
+    fontSize: '0.85rem',
+    textTransform: 'uppercase' as const,
+    border: `2px solid ${BRAND.charcoal}`,
+    boxShadow: pxSm(),
+    textDecoration: 'none',
+    fontWeight: 400,
+  } satisfies CSSProperties,
+
+  // === Final CTA ===
+  // Source: homepage/shipping cow home page(1).html lines 757-773
+  // CSS: .final-cta, .final-cta__inner, .final-cta h2, .final-cta p,
+  //      .final-cta__btns, .final-cta__primary, .final-cta__secondary, .trust-signals
+
+  finalCtaSection: {
+    padding: '6rem 1.5rem',
+    background: BRAND.blue,
+    borderTop: `3px solid ${BRAND.charcoal}`,
+    borderBottom: `3px solid ${BRAND.charcoal}`,
+    textAlign: 'center' as const,
+  } satisfies CSSProperties,
+
+  finalCtaInner: {
+    maxWidth: 680,
+    margin: '0 auto',
+  } satisfies CSSProperties,
+
+  finalCtaLogoWrap: {
+    fontSize: '3.5rem',
+    marginBottom: '1.25rem',
+  } satisfies CSSProperties,
+
+  finalCtaLogo: {
+    width: 80,
+    height: 80,
+    objectFit: 'contain' as const,
+    imageRendering: 'pixelated' as const,
+  } satisfies CSSProperties,
+
+  finalCtaH2: {
+    fontSize: 'clamp(2rem, 5vw, 3.25rem)',
+    color: BRAND.white,
+    fontFamily: FONT.display,
+    marginBottom: '1.25rem',
+    lineHeight: 1.15,
+    fontWeight: 400,
+    textTransform: 'none' as const,
+  } satisfies CSSProperties,
+
+  finalCtaP: {
+    fontSize: '1.1rem',
+    color: '#BFDBFE', // verbatim — prototype line 324
+    lineHeight: 1.7,
+    marginBottom: '2.5rem',
+    fontFamily: FONT.body,
+  } satisfies CSSProperties,
+
+  finalCtaBtns: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: '1rem',
+    justifyContent: 'center',
+    marginBottom: '2.5rem',
+  } satisfies CSSProperties,
+
+  // Orange primary button (not BRAND.yellow — prototype uses #F97316 orange)
+  finalCtaPrimary: {
+    background: '#F97316', // verbatim — prototype line 326 (orange, not yellow)
+    color: BRAND.white,
+    fontWeight: 800,
+    fontSize: '1.0625rem',
+    padding: '0.9rem 2rem',
+    border: `3px solid ${BRAND.charcoal}`,
+    borderRadius: 6,
+    boxShadow: `4px 4px 0 ${BRAND.charcoal}`,
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontFamily: FONT.display,
+    textTransform: 'uppercase' as const,
+  } satisfies CSSProperties,
+
+  finalCtaSecondary: {
+    background: 'transparent',
+    color: BRAND.white,
+    fontWeight: 700,
+    fontSize: '1rem',
+    padding: '0.9rem 1.75rem',
+    border: '2px solid rgba(255,255,255,.5)', // verbatim — prototype line 328
+    borderRadius: 6,
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontFamily: FONT.display,
+    textTransform: 'uppercase' as const,
+  } satisfies CSSProperties,
+
+  trustSignals: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: '0.5rem 1.5rem',
+    justifyContent: 'center',
+    fontSize: '0.9rem',
+    color: '#BFDBFE', // verbatim — consistent with finalCtaP
+    fontFamily: FONT.body,
+  } satisfies CSSProperties,
 } as const;
+
+// === B.8 Testimonials data ===
+// Source: homepage/shipping cow home page(1).html lines 731-733
+const TESTIMONIALS = [
+  {
+    stars: '★★★★★',
+    quote: '“We were paying FedEx $4.20/lb on dimensional weight for our outdoor furniture line. ShippingCow’s DIM 225 dropped our per-shipment cost by 34%. That’s $22K back in our pocket this quarter.”',
+    name: 'Marcus T.',
+    company: 'Founder, OutdoorKraft Co.',
+  },
+  {
+    stars: '★★★★★',
+    quote: '“Our previous 3PL had a 3.1% shrinkage clause buried in the contract. ShippingCow has zero shrinkage. Zero. They’ve processed 8,400 of our units without a single loss.”',
+    name: 'Priya M.',
+    company: 'VP Ops, FitHeavy Equipment',
+  },
+  {
+    stars: '★★★★★',
+    quote: '“The zone-skip routing is legit. We ship appliances from NJ and 91% of our orders hit Zone 4 or lower. 2-day delivery actually means 2-day delivery for our customers.”',
+    name: 'Derek S.',
+    company: 'CEO, HomePro Direct',
+  },
+] as const;
+
+// === B.9 Services data ===
+// Source: homepage/shipping cow home page(1).html lines 746-751
+const SERVICES = [
+  {
+    num: 'SVC 01',
+    title: 'First Mile & Ocean Freight Import',
+    tag: '“Don’t Let Your Container Sit at Port While Costs Stack Up”',
+    body: 'Smart-quotation across ocean carriers for FCL and LCL bookings — with HTS-code-assisted customs clearance, ISF 10+2 filing, and autonomous document generation built in.',
+  },
+  {
+    num: 'SVC 02',
+    title: 'Middle Mile & LTL Consolidation',
+    tag: '“Zone-Skip Your Way to Profitability”',
+    body: 'We consolidate your outbound freight into line-haul trailers bound for strategic injection points — so your parcels enter at Zone 1–4. Result: 28–52% lower per-parcel cost.',
+  },
+  {
+    num: 'SVC 03',
+    title: 'Heavy Goods Warehousing',
+    tag: '“We Treat Your Inventory Like It’s Ours.”',
+    body: 'Fulfillment nodes engineered for heavy goods — furniture, fitness equipment, appliances, outdoor gear. Bin-level WMS tracking, 24/7 security, zero-shrinkage guarantee.',
+  },
+  {
+    num: 'SVC 04',
+    title: 'AI-Powered Packaging Optimization',
+    tag: '“Stop Paying for Air. Start Paying for Deliveries.”',
+    body: 'Every SKU gets a 3D geometry profile. Our Packaging Optimizer finds the exact carton that minimizes your billable DIM weight — returned in under 200ms, applied automatically.',
+  },
+  {
+    num: 'SVC 05',
+    title: 'Last Mile & 2-Day Delivery',
+    tag: '“The Amazon SFP Badge. The TikTok 48-Hour SLA.”',
+    body: 'Our Smart Routing Algorithm guarantees every destination ZIP in our coverage zone receives delivery in 2 business days. We handle SFP compliance and TikTok dispatch.',
+  },
+  {
+    num: 'SVC 06',
+    title: 'Returns & Reverse Logistics',
+    tag: '“Returns Don’t Have to Be a Total Loss Anymore”',
+    body: 'Heavy goods return rates run 15–20%. Shipping Cow handles returns authorization, reverse routing, condition triage, and refurbishment — goods go back to sellable status.',
+  },
+] as const;
 
 export default function HomePage() {
   return (
@@ -882,6 +1200,89 @@ export default function HomePage() {
             <a href="#inquiry" style={S.ctaBarBtn}>Get My Free Personalized Report →</a>
           </div>
 
+        </div>
+      </section>
+
+      {/* === B.8 Testimonials — "The Herd Has Spoken" === */}
+      {/* Source: homepage/shipping cow home page(1).html lines 724-738 */}
+      <section style={S.proofSection}>
+        <div style={S.proofContainer}>
+          <div style={S.proofHead}>
+            <h2 style={S.proofH2}>
+              The Herd <span style={S.proofH2Accent}>Has Spoken</span>
+            </h2>
+            <p style={S.proofSubP}>Real merchants. Real savings. No bull.</p>
+          </div>
+          <div style={S.proofGrid}>
+            {TESTIMONIALS.map((t) => (
+              <div key={t.name} style={S.proofCard}>
+                <div style={S.proofStars}>{t.stars}</div>
+                <p style={S.proofQuote}>{t.quote}</p>
+                <div style={S.proofName}>{t.name}</div>
+                <div style={S.proofCompany}>{t.company}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* === B.9 Services — "Every Link in the Chain" === */}
+      {/* Source: homepage/shipping cow home page(1).html lines 739-756 */}
+      <section style={S.servicesSection} id="services">
+        <div style={S.sectionContainer}>
+          <div style={S.sectionHead}>
+            <h2 style={S.sectionH2}>
+              Every Link in the Chain.{' '}
+              <span style={S.sectionH2Accent}>Handled by the Herd.</span>
+            </h2>
+            <p style={S.sectionSubP}>
+              From the moment your container leaves overseas to the minute your customer unboxes — one platform, full visibility.
+            </p>
+          </div>
+          <div style={S.servicesGrid}>
+            {SERVICES.map((svc) => (
+              <article key={svc.num} style={S.serviceCard}>
+                <div style={S.serviceNum}>{svc.num}</div>
+                <h3 style={S.serviceCardH3}>{svc.title}</h3>
+                <p style={S.serviceTag}>{svc.tag}</p>
+                <p style={S.serviceCardP}>{svc.body}</p>
+                <a href="#inquiry" style={S.serviceBtnSm}>Get a Quote →</a>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* === B.10 Final CTA — "Ready to Start Saving?" === */}
+      {/* Source: homepage/shipping cow home page(1).html lines 757-773 */}
+      {/* id="inquiry" is the anchor target for all href="#inquiry" links on the page */}
+      <section style={S.finalCtaSection} id="inquiry">
+        <div style={S.finalCtaInner}>
+          {/* cow-logo.png extracted from prototype base64 (386KB, 4000×4000 JPEG — too large to inline) */}
+          <div style={S.finalCtaLogoWrap}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/cow-logo.png"
+              alt="ShippingCow logo"
+              style={S.finalCtaLogo}
+            />
+          </div>
+          <h2 style={S.finalCtaH2}>Ready to Start Saving?</h2>
+          <p style={S.finalCtaP}>
+            Get your free shipping audit and see exactly how much you&rsquo;re overpaying today. No commitment. 24-hour turnaround.
+          </p>
+          <div style={S.finalCtaBtns}>
+            {/* TODO: primary button is a placeholder — no inquiry form in WS B scope */}
+            <a href="#" style={S.finalCtaPrimary}>Get My Free Shipping Audit →</a>
+            {/* Secondary changed from #why-us (no such anchor) to #who-we-are (T3 section id) */}
+            <a href="#who-we-are" style={S.finalCtaSecondary}>See Why Us →</a>
+          </div>
+          <div style={S.trustSignals}>
+            <span>✓ No long-term contracts</span>
+            <span>✓ Live in under 24 hours</span>
+            <span>✓ Free savings estimate</span>
+            <span>✓ Cancel any time</span>
+          </div>
         </div>
       </section>
 

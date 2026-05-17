@@ -264,7 +264,7 @@ const S = {
     color: BRAND.charcoal,
     background: BRAND.yellow,
     border: `3px solid ${BRAND.yellow}`,
-    boxShadow: pxSm(BRAND.yellow),
+    boxShadow: pxSm(),
     padding: '12px 20px',
     textDecoration: 'none',
     display: 'block',

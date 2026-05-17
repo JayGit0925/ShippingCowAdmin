@@ -17,9 +17,8 @@ const eyebrowStyle: CSSProperties = {
 };
 
 export default function LoginPage() {
-  const supabase = browserClient();
-
   async function onGoogleSignIn() {
+    const supabase = browserClient();
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {

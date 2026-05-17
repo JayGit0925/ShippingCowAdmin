@@ -1,43 +1,10 @@
 import type { CSSProperties } from 'react';
-import { BRAND, px, pxSm, FONT } from '@/lib/brand';
+import { BRAND, px, FONT } from '@/lib/brand';
+import { PublicLayout } from '@/components/shell/public-layout';
 import RateCalculator from './_rate-calculator';
 import QuoteForm from './_quote-form';
 
 const S = {
-  nav: {
-    position: 'sticky',
-    top: 0,
-    zIndex: 100,
-    background: BRAND.blue,
-    borderBottom: `3px solid ${BRAND.yellow}`,
-    padding: '0 32px',
-    height: 56,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  } satisfies CSSProperties,
-
-  navLogo: {
-    fontFamily: FONT.display,
-    fontSize: 22,
-    color: BRAND.white,
-    letterSpacing: '0.02em',
-    textDecoration: 'none',
-  } satisfies CSSProperties,
-
-  navCta: {
-    fontFamily: FONT.pixel,
-    fontSize: 9,
-    color: BRAND.charcoal,
-    background: BRAND.yellow,
-    border: `3px solid ${BRAND.charcoal}`,
-    boxShadow: pxSm(),
-    padding: '8px 12px',
-    textDecoration: 'none',
-    display: 'inline-block',
-    lineHeight: 1.4,
-  } satisfies CSSProperties,
-
   hero: {
     background: `linear-gradient(180deg, #dce8fb 0%, ${BRAND.pageBed} 100%)`,
     padding: '72px 32px',
@@ -115,17 +82,6 @@ const S = {
     color: BRAND.charcoal,
     textTransform: 'uppercase',
     margin: '0 0 24px',
-  } satisfies CSSProperties,
-
-  footer: {
-    background: BRAND.charcoal,
-    padding: '28px 32px',
-    textAlign: 'center',
-    fontFamily: FONT.pixel,
-    fontSize: 8,
-    color: BRAND.white,
-    lineHeight: 1.8,
-    letterSpacing: '0.06em',
   } satisfies CSSProperties,
 
   featuresSection: {
@@ -262,13 +218,7 @@ const S = {
 
 export default function LandingPage() {
   return (
-    <>
-      {/* Nav */}
-      <nav style={S.nav}>
-        <a href="/" style={S.navLogo}>ShippingCow</a>
-        <a href="#quote" style={S.navCta}>Get My Rate →</a>
-      </nav>
-
+    <PublicLayout currentPath="/">
       {/* Hero */}
       <section style={S.hero}>
         <div style={S.heroInner}>
@@ -386,11 +336,6 @@ export default function LandingPage() {
           <QuoteForm />
         </div>
       </section>
-
-      {/* Footer */}
-      <footer style={S.footer}>
-        © 2026 ShippingCow — Built for heavy-item sellers
-      </footer>
-    </>
+    </PublicLayout>
   );
 }

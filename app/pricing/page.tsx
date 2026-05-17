@@ -263,7 +263,7 @@ const S = {
     fontSize: 8,
     color: BRAND.charcoal,
     background: BRAND.yellow,
-    border: `3px solid ${BRAND.yellow}`,
+    border: `3px solid ${BRAND.charcoal}`,
     boxShadow: pxSm(),
     padding: '12px 20px',
     textDecoration: 'none',

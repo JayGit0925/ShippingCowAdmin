@@ -472,7 +472,7 @@ const S = {
 
 export default function LandingPage() {
   return (
-    <PublicLayout currentPath="/">
+    <PublicLayout currentPath="/launch">
 
       {/* ── Hero (v2 port) ──────────────────────────────────────────────────── */}
       <section style={S.hero} id="form-anchor">

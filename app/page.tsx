@@ -747,7 +747,7 @@ const S = {
 
   serviceCardP: {
     fontSize: '0.9rem',
-    color: '#3a4454', // verbatim — prototype line 318
+    color: BRAND.muted,
     flex: 1,
     fontFamily: FONT.body,
     lineHeight: 1.6,
@@ -860,8 +860,9 @@ const S = {
     flexWrap: 'wrap' as const,
     gap: '0.5rem 1.5rem',
     justifyContent: 'center',
-    fontSize: '0.9rem',
-    color: '#BFDBFE', // verbatim — consistent with finalCtaP
+    fontSize: '0.875rem',
+    fontWeight: 500,
+    color: '#93C5FD', // verbatim — prototype .trust-signals
     fontFamily: FONT.body,
   } satisfies CSSProperties,
 } as const;

@@ -1,6 +1,6 @@
 # LinkedIn DMs — Manhattan 50lb+ Campaign
 
-**Status:** READY pending Vercel project rename. Public URL is `https://shippingcow.vercel.app/` after `shippingcow-admin` → `shippingcow` rename. Until rename completes, URL resolves at `https://shippingcow-admin.vercel.app/`.
+**Status:** READY pending Vercel project rename. Public URL is `https://shippingcowmvp.vercel.app/` after `shippingcow-admin` → `shippingcowmvp` rename. Until rename completes, URL resolves at `https://shippingcow-admin.vercel.app/`.
 **Targets:** Manhattan Shopify / TikTok Shop sellers, furniture / home goods, 50lb+ items.
 **Voice:** MOOOVY. Lead with the DIM problem. One specific number. Short sentences.
 
@@ -18,7 +18,7 @@ They're probably billing you for 80 lbs on a 40-lb couch. Dimensional weight. It
 
 We fixed it. ShippingCow optimizes your label weight and carrier routing so you stop getting hammered on DIM.
 
-See how much you're leaving on the table: https://shippingcow.vercel.app/
+See how much you're leaving on the table: https://shippingcowmvp.vercel.app/
 
 — Jay @ ShippingCow
 
@@ -30,7 +30,7 @@ See how much you're leaving on the table: https://shippingcow.vercel.app/
 
 One thing I didn't mention last week — DIM weight kills furniture margins. Most Shopify sellers in Manhattan are overpaying $50-150 per week just on dimensional weight alone.
 
-We built ShippingCow to fix it. Calculator takes 30 seconds: https://shippingcow.vercel.app/
+We built ShippingCow to fix it. Calculator takes 30 seconds: https://shippingcowmvp.vercel.app/
 
 Worth a look.
 
@@ -48,7 +48,7 @@ Here's the thing — dimensional weight pricing is probably costing you $15-25 p
 
 ShippingCow optimizes your weight calculations and routing so you don't overpay. [Mutual contact] thought you'd want to know about this.
 
-Quick 30-second look: https://shippingcow.vercel.app/
+Quick 30-second look: https://shippingcowmvp.vercel.app/
 
 — Jay @ ShippingCow
 
@@ -64,7 +64,7 @@ The bad news: dimensional weight is destroying your margins. For every sofa you 
 
 ShippingCow kills the DIM tax. We optimize every label so you actually keep what you earn.
 
-See your numbers: https://shippingcow.vercel.app/
+See your numbers: https://shippingcowmvp.vercel.app/
 
 — Jay @ ShippingCow
 
@@ -78,7 +78,7 @@ Great meeting you at [Event] last week. You mentioned shipping was a pain point 
 
 I wasn't kidding about dimensional weight. It's costing you more than you think. Most sellers don't realize carriers are billing them 2x the actual weight on larger items.
 
-ShippingCow fixes the math. Calculator's free, takes 30 seconds, and shows you exactly what you're losing: https://shippingcow.vercel.app/
+ShippingCow fixes the math. Calculator's free, takes 30 seconds, and shows you exactly what you're losing: https://shippingcowmvp.vercel.app/
 
 Let me know what you find.
 

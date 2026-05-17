@@ -8,14 +8,14 @@
 
 **Tech Stack:** Next.js 14 App Router · TypeScript strict · React 18 server components by default · `@calcom/embed-react` (new dep) · existing `@supabase/supabase-js` for `quote_requests` · Vitest unit · Playwright e2e.
 
-**Prerequisite (Jay, before Task 1):** Rename Vercel project `shippingcow-admin` → `shippingcow`. Steps: Vercel dashboard → Project Settings → General → Project Name. Confirm `https://shippingcow.vercel.app/` resolves to the current production deploy. The old alias `shippingcow-admin.vercel.app` keeps working.
+**Prerequisite (Jay, before Task 1):** Rename Vercel project `shippingcow-admin` → `shippingcowmvp`. Steps: Vercel dashboard → Project Settings → General → Project Name. Confirm `https://shippingcowmvp.vercel.app/` resolves to the current production deploy. The old alias `shippingcow-admin.vercel.app` keeps working.
 
 **Locked decisions (from grill 2026-05-16):**
 
 | # | Decision |
 |---|---|
 | Domain | `shippingcow.ai` is owned; DNS deferred until after first 5 demos |
-| Public URL during deferred-DNS | `shippingcow.vercel.app` (post-rename) |
+| Public URL during deferred-DNS | `shippingcowmvp.vercel.app` (post-rename) |
 | Admin/public separation | Single Vercel project; `/admin/*` stays middleware-gated |
 | Design source of truth | `landingpage/shippingcow-landingpage-v2(1).html` |
 | Page list | `/`, `/how-it-works`, `/pricing`, `/quote/submitted` |
@@ -637,11 +637,11 @@ Stop here. Jay reviews preview URL. Approves merge or sends back for revisions.
 ```bash
 git checkout master && git pull && git merge --ff-only <feature-branch> && git push origin master
 ```
-Triggers Vercel prod deploy at `shippingcow.vercel.app`.
+Triggers Vercel prod deploy at `shippingcowmvp.vercel.app`.
 
 - [ ] **Step 5: Post-deploy smoke**
 
-Hit `https://shippingcow.vercel.app/`, submit a real (test) quote, verify it lands in `quote_requests` in Supabase prod (`aetvueyuaxbgszcisoci`). Verify Cal.com slot booking flow end-to-end (book → cancel).
+Hit `https://shippingcowmvp.vercel.app/`, submit a real (test) quote, verify it lands in `quote_requests` in Supabase prod (`aetvueyuaxbgszcisoci`). Verify Cal.com slot booking flow end-to-end (book → cancel).
 
 - [ ] **Step 6: Update `docs/migrations-applied.md` Vercel section**
 
@@ -649,7 +649,7 @@ Note the project rename (`shippingcow-admin` → `shippingcow`) and the new publ
 
 - [ ] **Step 7: Tell Jay the DM campaign is unblocked**
 
-The DM copy at `docs/campaign/linkedin-dms.md` already points at `https://shippingcow.vercel.app/`. After the Vercel rename + this deploy, the campaign is technically ready to send.
+The DM copy at `docs/campaign/linkedin-dms.md` already points at `https://shippingcowmvp.vercel.app/`. After the Vercel rename + this deploy, the campaign is technically ready to send.
 
 ---
 

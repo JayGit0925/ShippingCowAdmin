@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { BRAND, px, pxSm, FONT } from '@/lib/brand';
 import { PublicLayout } from '@/components/shell/public-layout';
+import DimCalculator from './_dim-calculator';
 
 // === Hero (homepage port) ===
 // Source: homepage/shipping cow home page(1).html lines 406-438
@@ -464,6 +465,111 @@ const S = {
     fontFamily: FONT.body,
     lineHeight: 1.6,
   } satisfies CSSProperties,
+
+  // === Tools section ===
+  // Source: homepage/shipping cow home page(1).html lines 456–563
+  // CSS: .section.section--alt, .section__head, .tool-stack, .tool-card,
+  //      .tool-card__info, .tool-tag, .tool-stat, .tool-card__embed
+
+  toolsSection: {
+    padding: '5rem 0',
+    background: BRAND.pageBed,
+  } satisfies CSSProperties,
+
+  toolsContainer: {
+    maxWidth: 1240,
+    margin: '0 auto',
+    padding: '0 1.5rem',
+  } satisfies CSSProperties,
+
+  toolsHead: {
+    textAlign: 'center' as const,
+    maxWidth: 720,
+    margin: '0 auto 2.5rem',
+  } satisfies CSSProperties,
+
+  toolsH2: {
+    fontFamily: FONT.display,
+    fontSize: 'clamp(1.8rem, 3.5vw, 2.6rem)',
+    textTransform: 'none' as const,
+    fontWeight: 400,
+  } satisfies CSSProperties,
+
+  // Blue accent span in tools H2
+  toolsH2Accent: {
+    color: BRAND.blue,
+  } satisfies CSSProperties,
+
+  toolsSubP: {
+    marginTop: '0.75rem',
+    color: BRAND.muted,
+    fontSize: '1.05rem',
+    fontFamily: FONT.body,
+  } satisfies CSSProperties,
+
+  toolStack: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '3.5rem',
+  } satisfies CSSProperties,
+
+  toolCard: {
+    background: BRAND.white,
+    border: `4px solid ${BRAND.charcoal}`,
+    boxShadow: `6px 6px 0 ${BRAND.charcoal}`,
+    display: 'grid',
+    gridTemplateColumns: '300px 1fr',
+    overflow: 'hidden' as const,
+  } satisfies CSSProperties,
+
+  toolCardInfo: {
+    padding: '2.5rem 2rem',
+    borderRight: `4px solid ${BRAND.charcoal}`,
+    display: 'flex',
+    flexDirection: 'column' as const,
+  } satisfies CSSProperties,
+
+  toolTag: {
+    fontFamily: FONT.pixel,
+    fontSize: '0.6rem',
+    color: BRAND.blue,
+    border: `2px solid ${BRAND.blue}`,
+    display: 'inline-block',
+    padding: '0.3rem 0.55rem',
+    marginBottom: '1rem',
+  } satisfies CSSProperties,
+
+  toolCardH3: {
+    fontFamily: FONT.display,
+    fontSize: '1.5rem',
+    textTransform: 'uppercase' as const,
+    marginBottom: '0.75rem',
+    lineHeight: 1.1,
+    fontWeight: 400,
+  } satisfies CSSProperties,
+
+  toolCardP: {
+    color: BRAND.muted,
+    fontSize: '0.97rem',
+    lineHeight: 1.65,
+    marginBottom: '1.5rem',
+    fontFamily: FONT.body,
+  } satisfies CSSProperties,
+
+  toolStat: {
+    marginTop: 'auto',
+    background: BRAND.charcoal,
+    color: BRAND.yellow,
+    padding: '0.85rem 1rem',
+    fontFamily: FONT.pixel,
+    fontSize: '0.58rem',
+    lineHeight: 1.8,
+  } satisfies CSSProperties,
+
+  toolCardEmbed: {
+    padding: '2rem 2.5rem',
+    background: BRAND.pageBed,
+  } satisfies CSSProperties,
 } as const;
 
 export default function HomePage() {
@@ -544,17 +650,17 @@ export default function HomePage() {
             </div>
             <div style={S.painGrid}>
               <div style={S.painCard}>
-                <div style={S.painCardIcon}>$</div>
+                <div style={S.painCardIcon} aria-hidden="true">$</div>
                 <h3 style={S.painCardH3}>DIM Weight Death Spiral</h3>
                 <p style={S.painCardP}>You&rsquo;re paying for air. Our 3D Packaging Optimizer kills overcharge before it starts — average merchant saves $0.85–$2.40 per shipment on DIM alone.</p>
               </div>
               <div style={S.painCard}>
-                <div style={S.painCardIcon}>⚖</div>
+                <div style={S.painCardIcon} aria-hidden="true">⚖</div>
                 <h3 style={S.painCardH3}>No Carrier Leverage?</h3>
                 <p style={S.painCardP}>We pool volume across our entire merchant herd. You get FedEx enterprise rates without enterprise volume — up to 80% off published rates.</p>
               </div>
               <div style={S.painCard}>
-                <div style={S.painCardIcon}>📝</div>
+                <div style={S.painCardIcon} aria-hidden="true">📝</div>
                 <h3 style={S.painCardH3}>Drowning in Paperwork?</h3>
                 <p style={S.painCardP}>Bills of Lading. Customs filings. ISF 10+2. Our AI Copilot handles it all autonomously — 85%+ of your paperwork, done before you ask.</p>
               </div>
@@ -583,39 +689,39 @@ export default function HomePage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/warehouse-illustration.png"
-                alt="ShippingCow mascot"
+                alt="ShippingCow warehouse illustration showing fulfillment operations"
                 style={S.aboutArtImg}
               />
             </div>
           </div>
           <div style={S.statGrid}>
             <div style={S.statCard}>
-              <div style={S.statCardIcon}>📦</div>
+              <div style={S.statCardIcon} aria-hidden="true">📦</div>
               <div style={S.statCardNum}>300K+ sq ft</div>
               <div style={S.statCardLbl}>Heavy-Goods Warehouse Space</div>
             </div>
             <div style={S.statCard}>
-              <div style={S.statCardIcon}>🏭</div>
+              <div style={S.statCardIcon} aria-hidden="true">🏭</div>
               <div style={S.statCardNum}>3 Strategic Warehouses</div>
               <div style={S.statCardLbl}>NJ · CA · TX</div>
             </div>
             <div style={S.statCard}>
-              <div style={S.statCardIcon}>🤖</div>
+              <div style={S.statCardIcon} aria-hidden="true">🤖</div>
               <div style={S.statCardNum}>AI Route Optimization</div>
               <div style={S.statCardLbl}>Every Shipment, Every Time</div>
             </div>
             <div style={S.statCard}>
-              <div style={S.statCardIcon}>💰</div>
+              <div style={S.statCardIcon} aria-hidden="true">💰</div>
               <div style={S.statCardNum}>$1,500+/mo</div>
               <div style={S.statCardLbl}>Avg. Merchant Savings</div>
             </div>
             <div style={S.statCard}>
-              <div style={S.statCardIcon}>📉</div>
+              <div style={S.statCardIcon} aria-hidden="true">📉</div>
               <div style={S.statCardNum}>80% Off</div>
               <div style={S.statCardLbl}>FedEx Published Rates</div>
             </div>
             <div style={S.statCard}>
-              <div style={S.statCardIcon}>✅</div>
+              <div style={S.statCardIcon} aria-hidden="true">✅</div>
               <div style={S.statCardNum}>99.2%</div>
               <div style={S.statCardLbl}>2-Day SLA Attained</div>
             </div>
@@ -662,7 +768,52 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* TODO: T4-T6 port calculators + closing sections */}
+      {/* === B.4 Tools Section (homepage port) === */}
+      {/* Source: homepage/shipping cow home page(1).html lines 456–563 */}
+      <section style={S.toolsSection} id="tools">
+        <div style={S.toolsContainer}>
+          <div style={S.toolsHead}>
+            <h2 style={S.toolsH2}>
+              See Your Savings{' '}
+              <span style={S.toolsH2Accent}>Before You Sign Anything</span>
+            </h2>
+            <p style={S.toolsSubP}>
+              Run the numbers yourself. Three tools, real data, zero obligation.
+            </p>
+          </div>
+
+          <div style={S.toolStack}>
+
+            {/* ===== TOOL 01: DIM Weight Calculator ===== */}
+            <div style={S.toolCard}>
+              {/* Left info column — server-rendered */}
+              <div style={S.toolCardInfo}>
+                <div style={S.toolTag}>TOOL 01</div>
+                <h3 style={S.toolCardH3}>DIM Weight Savings Calculator</h3>
+                <p style={S.toolCardP}>
+                  See exactly how much DIM 225 saves you vs FedEx/UPS standard pricing.
+                  Enter your dimensions and monthly volume to see billable weight reduction
+                  and annual savings.
+                </p>
+                <div style={S.toolStat}>
+                  AVG MERCHANT SAVES<br />
+                  $0.85–$2.40 PER SHIPMENT<br />
+                  ON DIM WEIGHT ALONE
+                </div>
+              </div>
+              {/* Right embed column — client leaf */}
+              <div style={S.toolCardEmbed}>
+                <DimCalculator />
+              </div>
+            </div>
+
+            {/* TODO: US map (TOOL 02) deferred from WS B */}
+
+            {/* TODO: T5 ports Shrinkage Calculator (TOOL 03) */}
+
+          </div>
+        </div>
+      </section>
 
     </PublicLayout>
   );

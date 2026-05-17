@@ -9,6 +9,7 @@ export default {
           blue: '#0052C9',
           yellow: '#FEB81B',
           charcoal: '#1A202C',
+          muted: '#3a4454',
           'page-bed': '#F4F7FF',
           'mid-blue': '#3A7FDE',
           sky: '#B0C8F0',

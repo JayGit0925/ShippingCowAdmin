@@ -2,6 +2,7 @@ export const BRAND = {
   blue: '#0052C9',
   yellow: '#FEB81B',
   charcoal: '#1A202C',
+  muted: '#3a4454',
   pageBed: '#F4F7FF',
   midBlue: '#3A7FDE',
   sky: '#B0C8F0',

@@ -65,7 +65,7 @@ const S = {
 
 export function PublicNav({ currentPath }: { currentPath?: string }) {
   return (
-    <nav style={S.nav}>
+    <nav style={S.nav} aria-label="Main navigation">
       <a href="/" style={S.navLogo}>ShippingCow</a>
       <div style={S.navCenter}>
         <a href="/how-it-works" style={S.navLink}>How it works</a>

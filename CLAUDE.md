@@ -18,9 +18,21 @@ npm run dev         # http://localhost:3001
 npm run build       # production build
 npm run lint
 npm run typecheck   # tsc --noEmit
-```
 
-No test runner wired yet (Phase B+).
+npm test                       # vitest run --passWithNoTests
+npm run test:watch             # vitest watch
+npm run test:e2e               # playwright (requires `npm run test:e2e:install` once)
+npx vitest run path/to/file    # single test file
+npx vitest -t "case name"      # single test by name
+
+npm run db:push                # supabase db push (CLI; project link not currently set up — see Database)
+npm run db:types               # regenerate lib/supabase/types.ts
+npm run seed:ingest            # ingest CSVs (needs SEED_*_CSV env vars)
+
+npm run rate-audit             # scripts/rate-audit.ts — validates RATES vs real data
+npm run copy-optimizer         # scripts/copy-optimizer.ts
+npm run icp-monitor            # scripts/icp-monitor.ts
+```
 
 ## Architecture
 
@@ -33,7 +45,9 @@ No test runner wired yet (Phase B+).
 
 If you find yourself importing `adminClient` in a `'use client'` file, stop. The build still passes because `'server-only'` checks at runtime, not build time, but you've leaked the service role.
 
-**Auth flow:** `middleware.ts` runs on `/admin/:path*` and `/api/admin/:path*`. It checks Supabase session → `platform_admins` row → MFA factor presence, redirecting to `/login`, `/403`, or `/admin/setup-mfa` respectively. When `SUPABASE_CONFIGURED` is false (no env vars), middleware short-circuits with `x-dev-bypass: 1` so local dev works without infra. Production must set all three Supabase env vars.
+**Auth flow:** `middleware.ts` runs on `/admin/:path*` and `/api/admin/:path*`. It checks Supabase session (→ `/login` if missing) and `platform_admins.is_active` (→ `/403` if missing/inactive), then stamps `x-admin-role` on the response so downstream handlers can read it without re-querying. MFA is not enforced in middleware today — if you re-introduce it, add the check here. When `SUPABASE_CONFIGURED` is false (no env vars), middleware short-circuits with `x-dev-bypass: 1` and `x-admin-role: super-admin` so local dev works without infra. Production must set all three Supabase env vars.
+
+**Route-handler identity:** server routes call `getAdminContext(req)` from `lib/admin-context.ts` to resolve `{ actorId, actorRole, ip }`. It trusts the middleware-stamped `x-admin-role` header when present and falls back to a `platform_admins` lookup otherwise. In dev-bypass mode it returns a fixed super-admin context. Use this — there is no separate `assertAdminRole` function.
 
 **Audit logging:** every successful admin mutation must call `logAudit({...})` from `lib/audit.ts` at the end of the handler. The action enum is closed (see `AuditAction` type) — add new actions only when adding new mutations. Never call `logAudit` on failure paths. The `audit_log` table is append-only at the RLS level; do not write code that updates or deletes from it.
 
@@ -53,13 +67,22 @@ If you find yourself importing `adminClient` in a `'use client'` file, stop. The
 - TS strict mode, no `any`, no `// @ts-expect-error` without comment explaining why.
 - Server components default. Use `'use client'` only when you need state, effects, or browser APIs.
 - Inline `style={{...}}` is fine and matches the prototype. Tailwind utility classes are also fine. Don't mix on the same element.
-- Route handlers under `app/api/admin/*` must call `assertAdminRole` (not yet built — Phase C) and `logAudit` on success.
+- Route handlers under `app/api/admin/*` must call `getAdminContext(req)` for actor identity and `logAudit` on success.
 - Destructive UI actions (suspend, deactivate, kill switch) need a typed-confirmation modal. Don't skip this.
 - Never commit `.env.local`. `.env.example` is the template.
 
-## What is NOT done yet
+## Build phase status
 
-Phase A is the only phase in the repo. Phase B (Reference Data), C (Customers + Tickets), D (Revenue + Dashboard), E (Platform + Audit + Security) are all backlog. The full backlog is in `admin handoff v1(1).md` §11 + §14.
+Re-derive this from the tree before trusting it — phases land in slices and this section drifts.
+
+- **Phase A** (auth, brand, shell, audit log skeleton): shipped. Migration `0001_phase_a.sql`.
+- **Phase B** (Reference Data): shipped. `app/api/admin/reference/*`, `lib/reference-publish.ts`, `lib/reference-validators.ts`, migrations `0002_reference_tables.sql` + `0003_mv_refresh_stub.sql`.
+- **Phase C** (Customers + Tickets): partial. `app/admin/{customers,tickets}/`, `lib/customers.ts`, `app/api/admin/{orgs,tickets,billing}/`, migration `0004_customers_tickets.sql`.
+- **Phase D** (Revenue + Dashboard): partial. `app/admin/revenue/`, `app/admin/_kpi-bar.tsx` / `_mrr-chart.tsx` / `_alert-queue.tsx` / `_health-tiles.tsx`, `lib/metrics.ts`, `lib/stripe.ts`.
+- **Phase E** (Platform + Audit + Security): partial. `app/admin/{platform,security,audit}/`, `lib/{ccpa,feature-flags}.ts`, `app/api/admin/{platform,security,audit}/`, migration `0005_platform_security.sql`.
+- **Beyond the original handoff**: public quote-request flow (`app/api/quote-request/`, migration `0006_quote_requests.sql`); DM tracker (`app/admin/dm-tracker/`, `app/api/admin/dm-tracking/`, migration `0007_dm_tracking.sql`); `@anthropic-ai/sdk` for the copy/ICP scripts.
+
+The full backlog is in `admin handoff v1(1).md` §11 + §14.
 
 The user portal app (`apps/web` in the handoff) is not in this repo. It lives at `../shippingcow-nextjs/` or `../ShippingCow/` (separate repos). The admin portal connects to the same Supabase project as the user portal, but the two are deployed independently.
 
@@ -69,8 +92,8 @@ Supabase is the single source of truth for all data. Migrations live in `supabas
 
 **Migration workflow:**
 1. Write `supabase/migrations/000N_<name>.sql` using `CREATE TABLE IF NOT EXISTS` + `DROP POLICY IF EXISTS` so it's idempotent.
-2. Open Supabase Dashboard → SQL Editor → New query → paste contents → Run.
-3. Verify Table Editor reflects the new schema.
+2. Apply via Supabase MCP (`apply_migration`) against project `aetvueyuaxbgszcisoci` (shippingcow-admin-prod, us-east-1) — that's how 0001–0005 went out. Dashboard SQL Editor is the manual fallback.
+3. Verify Table Editor reflects the new schema and append to `docs/migrations-applied.md`.
 4. Commit the SQL file.
 
 **RLS posture:** every table has explicit policies. Most have `using (false) with check (false)` — meaning end-users cannot read or write directly; only the service role (admin portal via `adminClient()`) can. The `audit_log` table additionally uses BEFORE UPDATE/DELETE triggers to physically reject mutations even from the service role.
@@ -80,6 +103,18 @@ Supabase is the single source of truth for all data. Migrations live in `supabas
 **Seed data** is not in migrations. Run `npm run seed:ingest` with the `SEED_*_CSV` env vars set (see `supabase/seed/README.md`).
 
 **Reference data publish flow (Phase B.2):** edits go through `rate_card_drafts` (a draft row holds the proposed `draft_payload` + `validation_result`). On publish, `lib/reference-publish.ts` supersedes prior live rows for each business key (sets `effective_to = effective_from - 1`) and inserts the new rows, then RPC-calls `public.refresh_mv_org_cost_summary()` (a stub function in this repo that no-ops if the MV doesn't yet exist; user-portal repo overwrites with the real refresh). All mutating routes live under `app/api/admin/reference/[table]/*` and call `getAdminContext` for actor identity + `logAudit` on success.
+
+## Deployment & CI
+
+- **Prod URL:** `https://shippingcow-admin.vercel.app` (Vercel project `prj_CkdfeN1Em0EjFUtncRn9u0Rkv5ue`). `git push origin master` triggers auto-deploy.
+- **CI** (`.github/workflows/ci.yml`) runs `typecheck → build → test` on PR/push to master. The build step uses placeholder Supabase values plus `DEV_BYPASS=1` so it can compile without real secrets — match that pattern if you add env-dependent code paths.
+- **Install flag:** CI uses `npm install --legacy-peer-deps`. Use the same flag locally if a fresh install fails.
+
+## Services & env gating
+
+- **Supabase** — required for everything. If any of the three keys (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`) are missing, `SUPABASE_CONFIGURED` flips false and middleware enters dev-bypass.
+- **Stripe** — `STRIPE_SECRET_KEY` gates `/admin/revenue` billing actions. Routes under `app/api/admin/billing/*` return HTTP 503 with a clear "Stripe not wired" message when unset, so the rest of the portal stays usable in dev.
+- **Anthropic / Resend** — `ANTHROPIC_API_KEY` powers `scripts/{copy-optimizer,icp-monitor}.ts`. `RESEND_API_KEY` is Phase E (not wired yet).
 
 ## Companion documents
 

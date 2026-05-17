@@ -17,3 +17,23 @@
   0%, 100% { transform: rotate(0deg); }
   50%       { transform: rotate(-3deg); }
 }
+
+/* Shrinkage calculator range slider thumb — cannot be set via inline styles.
+   Verbatim from prototype: homepage/shipping cow home page(1).html lines 244-245 */
+.shrink-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #FEB81B; /* BRAND.yellow */
+  border: 3px solid #1A202C; /* BRAND.charcoal */
+  cursor: pointer;
+  border-radius: 0;
+}
+.shrink-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #FEB81B; /* BRAND.yellow */
+  border: 3px solid #1A202C; /* BRAND.charcoal */
+  cursor: pointer;
+  border-radius: 0;
+}

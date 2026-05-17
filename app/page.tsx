@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import { BRAND, px, pxSm, FONT } from '@/lib/brand';
 import { PublicLayout } from '@/components/shell/public-layout';
 import DimCalculator from './_dim-calculator';
+import ShrinkCalculator from './_shrink-calculator';
 
 // === Hero (homepage port) ===
 // Source: homepage/shipping cow home page(1).html lines 406-438
@@ -570,6 +571,45 @@ const S = {
     padding: '2rem 2.5rem',
     background: BRAND.pageBed,
   } satisfies CSSProperties,
+
+  // === CTA bar (after tool-stack, inside #tools section) ===
+  // Source: homepage/shipping cow home page(1).html lines 671-675
+  ctaBar: {
+    marginTop: '3rem',
+    padding: '2rem 2.5rem',
+    background: BRAND.charcoal,
+    border: `4px solid ${BRAND.charcoal}`,
+    boxShadow: px(),
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap' as const,
+    gap: '1.5rem',
+  } satisfies CSSProperties,
+
+  ctaBarP: {
+    color: BRAND.white,
+    fontFamily: FONT.body,
+    fontSize: '1.05rem',
+    lineHeight: 1.5,
+  } satisfies CSSProperties,
+
+  ctaBarBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '0.9rem 1.6rem',
+    fontFamily: FONT.display,
+    fontSize: '1rem',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+    background: BRAND.yellow,
+    color: BRAND.charcoal,
+    border: `3px solid ${BRAND.yellow}`,
+    boxShadow: '4px 4px 0 rgba(255,255,255,.2)', // verbatim — prototype line 674
+    textDecoration: 'none',
+    fontWeight: 400,
+    whiteSpace: 'nowrap' as const,
+  } satisfies CSSProperties,
 } as const;
 
 export default function HomePage() {
@@ -809,9 +849,39 @@ export default function HomePage() {
 
             {/* TODO: US map (TOOL 02) deferred from WS B */}
 
-            {/* TODO: T5 ports Shrinkage Calculator (TOOL 03) */}
+            {/* ===== TOOL 03: Zero Shrinkage Calculator ===== */}
+            {/* Source: homepage/shipping cow home page(1).html lines 596-667 */}
+            <div style={S.toolCard}>
+              {/* Left info column — server-rendered */}
+              <div style={S.toolCardInfo}>
+                <div style={S.toolTag}>TOOL 03</div>
+                <h3 style={S.toolCardH3}>Zero Shrinkage Calculator</h3>
+                <p style={S.toolCardP}>
+                  Industry average 3PL shrinkage runs 2–4%. Most providers treat it as
+                  &ldquo;normal.&rdquo; Calculate what &ldquo;normal&rdquo; costs you &mdash; then
+                  see what zero looks like.
+                </p>
+                <div style={S.toolStat}>
+                  SHIPPINGCOW SHRINKAGE RATE:<br />
+                  0.00%<br />
+                  BACKED BY OUR WALLET
+                </div>
+              </div>
+              {/* Right embed column — client leaf */}
+              <div style={S.toolCardEmbed}>
+                <ShrinkCalculator />
+              </div>
+            </div>
 
+          </div>{/* /tool-stack */}
+
+          {/* CTA bar — inside #tools section, after tool-stack close */}
+          {/* Source: homepage/shipping cow home page(1).html lines 671-675 */}
+          <div style={S.ctaBar}>
+            <p style={S.ctaBarP}>Liked what you see? Get a free personalized optimization report →</p>
+            <a href="#inquiry" style={S.ctaBarBtn}>Get My Free Personalized Report →</a>
           </div>
+
         </div>
       </section>
 

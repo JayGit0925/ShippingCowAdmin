@@ -645,7 +645,7 @@ const S = {
   } satisfies CSSProperties,
 
   proofSubP: {
-    color: '#B0C8F0', // verbatim — prototype line 304
+    color: BRAND.sky,
     marginTop: '0.75rem',
     fontFamily: FONT.body,
     fontSize: '1rem',
@@ -1217,7 +1217,7 @@ export default function HomePage() {
           <div style={S.proofGrid}>
             {TESTIMONIALS.map((t) => (
               <div key={t.name} style={S.proofCard}>
-                <div style={S.proofStars}>{t.stars}</div>
+                <div style={S.proofStars} aria-hidden="true">{t.stars}</div>
                 <p style={S.proofQuote}>{t.quote}</p>
                 <div style={S.proofName}>{t.name}</div>
                 <div style={S.proofCompany}>{t.company}</div>
@@ -1247,7 +1247,7 @@ export default function HomePage() {
                 <h3 style={S.serviceCardH3}>{svc.title}</h3>
                 <p style={S.serviceTag}>{svc.tag}</p>
                 <p style={S.serviceCardP}>{svc.body}</p>
-                <a href="#inquiry" style={S.serviceBtnSm}>Get a Quote →</a>
+                <a href="#inquiry" style={S.serviceBtnSm} aria-label={`Get a Quote for ${svc.title}`}>Get a Quote →</a>
               </article>
             ))}
           </div>
@@ -1265,6 +1265,8 @@ export default function HomePage() {
             <img
               src="/cow-logo.png"
               alt="ShippingCow logo"
+              width={80}
+              height={80}
               style={S.finalCtaLogo}
             />
           </div>

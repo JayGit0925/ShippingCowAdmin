@@ -10,18 +10,18 @@ export const PROFIT_MARGIN = 0.15;
 
 // ─── Rate tables (verbatim from prototype lines 800-802) ─────────────────────
 
-const GOFO_RATES: Record<number, number> = {
+const GOFO_RATES = {
   1:5.40,2:5.60,3:5.90,4:6.20,5:6.30,6:6.60,7:7.00,8:7.20,9:7.40,10:7.80,
   11:9.70,12:10.00,13:10.40,14:10.70,15:11.00,16:11.60,17:12.00,18:12.20,19:12.70,20:13.10,
-};
+} as const satisfies Record<number, number>;
 
-const FEDEX_GND: Record<number, number> = {
+const FEDEX_GND = {
   21:17.00,22:17.00,23:17.10,24:17.30,25:17.90,26:18.20,27:18.70,28:19.10,29:19.70,30:20.00,
   31:20.40,32:20.80,33:20.90,34:21.50,35:22.00,36:22.30,37:22.90,38:23.20,39:23.50,40:24.20,
   41:24.30,42:25.00,43:25.20,44:25.90,45:26.30,46:26.40,47:26.90,48:27.30,49:27.70,
-};
+} as const satisfies Record<number, number>;
 
-const FEDEX_HEAVY: Record<number, number> = {
+const FEDEX_HEAVY = {
   50:35.10,51:35.50,52:35.90,53:36.30,54:36.70,55:37.10,56:37.50,57:37.90,58:38.30,59:38.70,
   60:39.10,61:39.50,62:39.90,63:40.30,64:40.70,65:41.10,66:41.50,67:41.90,68:42.30,69:42.70,
   70:43.10,71:43.50,72:43.90,73:44.30,74:44.70,75:45.10,76:45.50,77:45.90,78:46.30,79:46.70,
@@ -33,7 +33,7 @@ const FEDEX_HEAVY: Record<number, number> = {
   127:74.60,128:74.60,129:74.60,130:74.60,131:74.60,132:74.60,133:74.60,134:74.60,135:74.60,
   136:74.60,137:74.60,138:74.60,139:74.60,140:74.60,141:74.60,142:74.60,143:74.60,144:74.60,
   145:74.60,146:74.60,147:74.60,148:74.60,149:74.60,
-};
+} as const satisfies Record<number, number>;
 
 // ─── Helpers (verbatim logic from prototype lines 804-833) ───────────────────
 
@@ -43,10 +43,10 @@ const FEDEX_HEAVY: Record<number, number> = {
  */
 export function getLastMileRate(w: number): { carrier: string; price: number } {
   const wc = Math.ceil(w);
-  if (wc <= 20) return { price: GOFO_RATES[wc] ?? GOFO_RATES[20]!, carrier: 'GOFO' };
-  if (wc <= 49) return { price: FEDEX_GND[wc] ?? FEDEX_GND[49]!, carrier: 'FedEx Ground' };
-  if (wc <= 149) return { price: FEDEX_HEAVY[wc] ?? FEDEX_HEAVY[149]!, carrier: 'FedEx Heavy' };
-  return { price: FEDEX_HEAVY[149]!, carrier: 'FedEx Heavy' };
+  if (wc <= 20) return { price: GOFO_RATES[wc as keyof typeof GOFO_RATES] ?? GOFO_RATES[20], carrier: 'GOFO' };
+  if (wc <= 49) return { price: FEDEX_GND[wc as keyof typeof FEDEX_GND] ?? FEDEX_GND[49], carrier: 'FedEx Ground' };
+  if (wc <= 149) return { price: FEDEX_HEAVY[wc as keyof typeof FEDEX_HEAVY] ?? FEDEX_HEAVY[149], carrier: 'FedEx Heavy' };
+  return { price: FEDEX_HEAVY[149], carrier: 'FedEx Heavy' };
 }
 
 /**

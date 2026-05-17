@@ -18,8 +18,16 @@
   50%       { transform: rotate(-3deg); }
 }
 
-/* Shrinkage calculator range slider thumb — cannot be set via inline styles.
+/* Shrinkage calculator range slider — base reset + thumb styles.
+   The base rule (appearance:none) is also set via inline style on the element,
+   but duplicating here makes the CSS self-contained and protects against future
+   refactors that drop the inline style.
    Verbatim from prototype: homepage/shipping cow home page(1).html lines 244-245 */
+.shrink-range {
+  appearance: none;
+  -webkit-appearance: none;
+  /* note: -ms-thumb omitted; Chromium Edge supports -webkit prefix */
+}
 .shrink-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 20px;

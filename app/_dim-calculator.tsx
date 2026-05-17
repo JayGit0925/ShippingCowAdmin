@@ -9,17 +9,7 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import { BRAND, FONT, px } from '@/lib/brand';
 import { recalcDim } from '@/lib/dim-calc';
-
-// ─── Format helpers (UI concerns; not exported to lib) ───────────────────────
-
-function fmt1(n: number): string {
-  return n.toFixed(1);
-}
-
-function fmtDollar(n: number): string {
-  if (n >= 1000) return '$' + (n / 1000).toFixed(1) + 'K';
-  return '$' + n.toFixed(2);
-}
+import { fmt1, fmtDollar } from '@/lib/fmt';
 
 // ─── Inline styles ────────────────────────────────────────────────────────────
 

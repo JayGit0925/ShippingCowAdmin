@@ -9,16 +9,7 @@ import { useState, useMemo } from 'react';
 import type { CSSProperties } from 'react';
 import { BRAND, FONT } from '@/lib/brand';
 import { recalcShrink } from '@/lib/shrink-calc';
-
-// ─── Format helpers (UI concerns; not exported to lib) ───────────────────────
-
-function fmtInt(n: number): string {
-  return '$' + Math.round(n).toLocaleString();
-}
-
-function fmtDollar2(n: number): string {
-  return '$' + n.toFixed(2);
-}
+import { fmtInt, fmtDollar2 } from '@/lib/fmt';
 
 // ─── Inline styles ────────────────────────────────────────────────────────────
 
@@ -240,6 +231,19 @@ const S = {
     lineHeight: 1,
     fontWeight: 400,
   } satisfies CSSProperties,
+
+  // Screen-reader-only visually hidden helper (C1 — a11y descriptor elements)
+  srOnly: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    padding: 0,
+    margin: -1,
+    overflow: 'hidden',
+    clip: 'rect(0, 0, 0, 0)',
+    whiteSpace: 'nowrap' as const,
+    border: 0,
+  } satisfies CSSProperties,
 } as const;
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -276,6 +280,7 @@ export default function ShrinkCalculator() {
               onChange={(e) => setAov(Math.max(0, parseFloat(e.target.value) || 0))}
               aria-describedby="sc-aov-desc"
             />
+            <span id="sc-aov-desc" style={S.srOnly}>Enter your average order value in US dollars.</span>
           </div>
           <div>
             <label style={S.shrinkLabel} htmlFor="sc-units">Annual Units Shipped</label>
@@ -309,6 +314,7 @@ export default function ShrinkCalculator() {
               value={weight}
               onChange={(e) => setWeight(Math.max(1, parseFloat(e.target.value)))}
               aria-label={`Typical package weight: ${weight} lbs`}
+              aria-valuetext={`${weight} pounds`}
             />
             {/* Scale labels — verbatim from prototype line 621 */}
             <div style={S.shrinkScale} aria-hidden="true">
@@ -343,6 +349,7 @@ export default function ShrinkCalculator() {
               value={rate}
               onChange={(e) => setRate(Math.max(2, parseFloat(e.target.value)))}
               aria-label={`3PL shrinkage rate: ${rate.toFixed(1)}%`}
+              aria-valuetext={`${rate.toFixed(1)} percent`}
             />
             {/* Scale labels — verbatim from prototype line 627 */}
             <div style={S.shrinkScale} aria-hidden="true">

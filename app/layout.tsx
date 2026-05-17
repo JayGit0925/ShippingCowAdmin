@@ -2,8 +2,11 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'ShippingCow Admin',
-  description: 'Internal admin portal for ShippingCow.',
+  title: {
+    default: 'ShippingCow — The 3PL for 50–149lb items',
+    template: '%s · ShippingCow',
+  },
+  description: 'Built for Shopify & TikTok Shop sellers shipping 50–149lb items. Dim factor 225, 3-warehouse zone skipping, transparent dashboard.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

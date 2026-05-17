@@ -34,6 +34,8 @@ const S = {
     fontSize: 13,
     color: BRAND.white,
     textDecoration: 'none',
+    paddingBottom: 3,
+    borderBottom: '3px solid transparent',
   } satisfies CSSProperties,
 
   navRight: {
@@ -64,12 +66,30 @@ const S = {
 };
 
 export function PublicNav({ currentPath }: { currentPath?: string }) {
+  const isActive = (href: string) => currentPath === href;
+
   return (
     <nav style={S.nav} aria-label="Main navigation">
       <a href="/" style={S.navLogo}>ShippingCow</a>
       <div style={S.navCenter}>
-        <a href="/how-it-works" style={S.navLink}>How it works</a>
-        <a href="/pricing" style={S.navLink}>Pricing</a>
+        <a
+          href="/how-it-works"
+          style={{
+            ...S.navLink,
+            borderBottom: isActive('/how-it-works') ? `3px solid ${BRAND.yellow}` : '3px solid transparent',
+          }}
+        >
+          How it works
+        </a>
+        <a
+          href="/pricing"
+          style={{
+            ...S.navLink,
+            borderBottom: isActive('/pricing') ? `3px solid ${BRAND.yellow}` : '3px solid transparent',
+          }}
+        >
+          Pricing
+        </a>
       </div>
       <div style={S.navRight}>
         <a href="/login" style={S.navLogin}>Login</a>

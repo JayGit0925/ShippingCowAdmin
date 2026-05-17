@@ -7,7 +7,7 @@ import QuoteForm from './_quote-form';
 
 export const metadata: Metadata = {
   title: 'Stop Getting Milked on Heavy Freight',
-  description: 'Most 50lb+ sellers bleed $1,500–$4,000/month on DIM overcharges, bad carrier zones, and 3PL shrinkage. Mooovy AI spots it in minutes — free audit, 24-hour turnaround.',
+  description: 'Most 50lb+ sellers bleed $1,500–$4,000/month on DIM overcharges, bad zones, and 3PL shrinkage. Mooovy AI spots it in minutes — free 24-hour audit.',
 };
 
 // ── Editable constant — shown in live badge ──────────────────────────────────

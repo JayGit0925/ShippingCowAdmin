@@ -154,3 +154,48 @@ describe('recalcDim — zero / missing inputs', () => {
     expect(result.savingsPerPkg).toBe(0);
   });
 });
+
+describe('recalcDim — negative inputs (C1 guard)', () => {
+  it('negative l: ready=false, cubic clamped to 0, all numeric fields 0', () => {
+    // l=-1: l*w*h = -288, clamped to 0
+    const result = recalcDim({ l: -1, w: 18, h: 16, wt: 55, vol: 100 });
+    expect(result.ready).toBe(false);
+    expect(result.cubic).toBe(0); // Math.max(0, -288) = 0
+    expect(result.dim139).toBe(0);
+    expect(result.dim166).toBe(0);
+    expect(result.dim225).toBe(0);
+    expect(result.bill139).toBe(0);
+    expect(result.bill166).toBe(0);
+    expect(result.bill225).toBe(0);
+    expect(result.lbsSaved).toBe(0);
+    expect(result.annualSavings).toBe(0);
+  });
+
+  it('negative wt: ready=false, all numeric fields 0', () => {
+    // wt is non-positive — guard triggers. Dimensions are positive so
+    // cubic = Math.max(0, 24*18*16) = 6912 (clamped only when product is negative)
+    const result = recalcDim({ l: 24, w: 18, h: 16, wt: -5, vol: 100 });
+    expect(result.ready).toBe(false);
+    expect(result.cubic).toBe(6912);
+    expect(result.dim139).toBe(0);
+    expect(result.bill139).toBe(0);
+    expect(result.lbsSaved).toBe(0);
+    expect(result.annualSavings).toBe(0);
+  });
+
+  it('decimal weight (55.5 lb): ready=true, bill values computed correctly', () => {
+    // 24×18×16 = 6912 cubic
+    // dim139 = 6912 / 139 ≈ 49.727…  → bill139 = max(55.5, 49.727) = 55.5
+    // dim166 = 6912 / 166 ≈ 41.639…  → bill166 = max(55.5, 41.639) = 55.5
+    // dim225 = 6912 / 225 = 30.72    → bill225 = max(55.5, 30.72) = 55.5
+    // lbsSaved = 55.5 - 55.5 = 0; annualSavings = 0
+    const result = recalcDim({ l: 24, w: 18, h: 16, wt: 55.5, vol: 100 });
+    expect(result.ready).toBe(true);
+    expect(result.cubic).toBe(6912);
+    expect(result.bill139).toBeCloseTo(55.5, 6);
+    expect(result.bill166).toBeCloseTo(55.5, 6);
+    expect(result.bill225).toBeCloseTo(55.5, 6);
+    expect(result.lbsSaved).toBeCloseTo(0, 6);
+    expect(result.annualSavings).toBeCloseTo(0, 6);
+  });
+});

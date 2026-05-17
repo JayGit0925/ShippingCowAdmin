@@ -25,9 +25,9 @@ export interface DimInput {
 }
 
 export interface DimResult {
-  /** L × W × H cubic inches (always computed, even when ready is false) */
+  /** L × W × H cubic inches. Computed when ready is true; clamped to 0 when any dimension is non-positive. */
   cubic: number;
-  /** Whether all 5 inputs are non-zero (result is meaningful only when true) */
+  /** Whether all 5 inputs are positive (result is meaningful only when true) */
   ready: boolean;
   // DIM weight by divisor
   dim139: number;
@@ -49,12 +49,11 @@ export interface DimResult {
 
 /**
  * Compute DIM weight metrics for a given package + volume.
- * Returns { cubic, ready: false, dim*: 0, ... } when any input is zero.
+ * Returns { cubic, ready: false, dim*: 0, ... } when any input is non-positive.
+ * cubic is clamped to 0 when any dimension is non-positive.
  * ZIP inputs are informational only; no zone lookup is performed here.
  */
 export function recalcDim({ l, w, h, wt, vol }: DimInput): DimResult {
-  const cubic = l * w * h;
-
   const zero: Omit<DimResult, 'cubic' | 'ready'> = {
     dim139: 0,
     dim166: 0,
@@ -68,9 +67,11 @@ export function recalcDim({ l, w, h, wt, vol }: DimInput): DimResult {
     annualSavings: 0,
   };
 
-  if (!l || !w || !h || !wt || !vol) {
-    return { cubic, ready: false, ...zero };
+  if (l <= 0 || w <= 0 || h <= 0 || wt <= 0 || vol <= 0) {
+    return { cubic: Math.max(0, l * w * h), ready: false, ...zero };
   }
+
+  const cubic = l * w * h;
 
   const dim139 = cubic / DIM_139;
   const dim166 = cubic / DIM_166;

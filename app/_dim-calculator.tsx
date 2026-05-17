@@ -5,7 +5,7 @@
 // Math is delegated to lib/dim-calc.ts (pure; reused by /quote in WS F).
 // This file: UI concerns only — state, formatting helpers, copy-link.
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import { BRAND, FONT, px } from '@/lib/brand';
 import { recalcDim } from '@/lib/dim-calc';
@@ -309,14 +309,28 @@ export default function DimCalculator() {
   const bar166h = result.ready ? Math.min((result.dim166 / maxDim) * 100, 100) + '%' : '80%';
   const bar225h = result.ready ? Math.min((result.dim225 / maxDim) * 100, 100) + '%' : '60%';
 
-  // Copy-link handler (graceful no-op if clipboard API unavailable)
+  // DRY: single source for bar chart + detail table columns (I1)
+  // verbatim — prototype 3-divisor chart colours
+  const BAR_COLS = [
+    { id: '139', label: 'UPS / FedEx (÷139)', color: '#ef4444', dim: result.dim139, bill: result.bill139, height: bar139h, best: false },
+    { id: '166', label: 'Typical 3PL (÷166)', color: '#f97316', dim: result.dim166, bill: result.bill166, height: bar166h, best: false },
+    { id: '225', label: 'ShippingCow (÷225)', color: '#059669', dim: result.dim225, bill: result.bill225, height: bar225h, best: true },
+  ] as const;
+
+  // Copy-link: track timer ref to prevent setState on unmounted component (C2)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+  }, []);
+
   const handleCopyLink = useCallback(() => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.href).then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }).catch(() => {/* clipboard denied — silent no-op */});
-    }
+    if (typeof navigator === 'undefined' || !navigator.clipboard) return;
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setCopied(true);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
   }, []);
 
   const numInput = (
@@ -329,7 +343,7 @@ export default function DimCalculator() {
       type="number"
       style={S.dimInput}
       value={val === 0 ? '' : val}
-      onChange={(e) => setter(parseFloat(e.target.value) || 0)}
+      onChange={(e) => setter(Math.max(0, parseFloat(e.target.value) || 0))}
     />
   );
 
@@ -362,7 +376,10 @@ export default function DimCalculator() {
           </div>
 
           {/* Zone badge + ZIP fields — informational only, no zone lookup */}
-          <div style={S.zoneBadge}>📍 Zone-Based Real Estimate</div>
+          <div style={S.zoneBadge}>📍 Zone-Based Estimate (Coming Soon)</div>
+          <small style={{ fontSize: '0.72rem', color: '#6b7280', display: 'block', marginBottom: '0.4rem' }}>
+            Enter ZIPs for zone-based estimates once enabled in your account.
+          </small>
           <div style={S.zipRow}>
             <div style={S.dimField}>
               <label style={S.dimLabel} htmlFor="dc-ozip">Origin ZIP</label>
@@ -398,121 +415,40 @@ export default function DimCalculator() {
         {/* ── Results column ── */}
         <div>
           {/* Bar chart */}
-          <div style={S.barChart}>
+          <div
+            style={S.barChart}
+            role="img"
+            aria-label={result.ready
+              ? `DIM weight comparison. UPS/FedEx ÷139: billable ${fmt1(result.bill139)} lbs. Typical 3PL ÷166: billable ${fmt1(result.bill166)} lbs. ShippingCow ÷225: billable ${fmt1(result.bill225)} lbs.`
+              : 'DIM weight comparison chart, awaiting input'
+            }
+          >
             <div style={S.barChartTitle}>DIM Weight Comparison</div>
             <div style={S.bars}>
-              {/* UPS / FedEx ÷139 — red */}
-              <div style={S.barCol}>
-                <div
-                  style={{
-                    ...S.barColLabel,
-                    // verbatim — prototype 3-divisor chart
-                    color: '#ef4444',
-                  }}
-                >
-                  UPS / FedEx (÷139)
+              {BAR_COLS.map((col) => (
+                <div key={col.id} style={S.barCol}>
+                  <div style={{ ...S.barColLabel, color: col.color }}>
+                    {col.label}
+                    {col.best && <span style={S.barBestLabel}>BEST</span>}
+                  </div>
+                  <div style={S.barColTrack}>
+                    <div
+                      style={{
+                        ...S.barColFill,
+                        background: col.color,
+                        height: col.height,
+                      }}
+                    />
+                  </div>
+                  <div style={{ ...S.barColVal, color: col.color }}>
+                    {result.ready ? fmt1(col.dim) + ' lbs DIM' : '—'}
+                  </div>
+                  <div style={S.barColBill}>
+                    Billable:{' '}
+                    {result.ready ? fmt1(col.bill) + ' lbs' : '—'}
+                  </div>
                 </div>
-                <div style={S.barColTrack}>
-                  <div
-                    style={{
-                      ...S.barColFill,
-                      // verbatim — prototype 3-divisor chart
-                      background: '#ef4444',
-                      height: bar139h,
-                    }}
-                  />
-                </div>
-                <div
-                  style={{
-                    ...S.barColVal,
-                    // verbatim — prototype 3-divisor chart
-                    color: '#ef4444',
-                  }}
-                >
-                  {result.ready ? fmt1(result.dim139) + ' lbs DIM' : '—'}
-                </div>
-                <div style={S.barColBill}>
-                  Billable:{' '}
-                  {result.ready ? fmt1(result.bill139) + ' lbs' : '—'}
-                </div>
-              </div>
-
-              {/* Typical 3PL ÷166 — orange */}
-              <div style={S.barCol}>
-                <div
-                  style={{
-                    ...S.barColLabel,
-                    // verbatim — prototype 3-divisor chart
-                    color: '#f97316',
-                  }}
-                >
-                  Typical 3PL (÷166)
-                </div>
-                <div style={S.barColTrack}>
-                  <div
-                    style={{
-                      ...S.barColFill,
-                      // verbatim — prototype 3-divisor chart
-                      background: '#f97316',
-                      height: bar166h,
-                    }}
-                  />
-                </div>
-                <div
-                  style={{
-                    ...S.barColVal,
-                    // verbatim — prototype 3-divisor chart
-                    color: '#f97316',
-                  }}
-                >
-                  {result.ready ? fmt1(result.dim166) + ' lbs DIM' : '—'}
-                </div>
-                <div style={S.barColBill}>
-                  Billable:{' '}
-                  {result.ready ? fmt1(result.bill166) + ' lbs' : '—'}
-                </div>
-              </div>
-
-              {/* ShippingCow ÷225 — green BEST */}
-              <div style={S.barCol}>
-                <div
-                  style={{
-                    ...S.barColLabel,
-                    // verbatim — prototype 3-divisor chart
-                    color: '#059669',
-                  }}
-                >
-                  ShippingCow (÷225){' '}
-                  <span
-                    style={S.barBestLabel}
-                  >
-                    BEST
-                  </span>
-                </div>
-                <div style={S.barColTrack}>
-                  <div
-                    style={{
-                      ...S.barColFill,
-                      // verbatim — prototype 3-divisor chart
-                      background: '#059669',
-                      height: bar225h,
-                    }}
-                  />
-                </div>
-                <div
-                  style={{
-                    ...S.barColVal,
-                    // verbatim — prototype 3-divisor chart
-                    color: '#059669',
-                  }}
-                >
-                  {result.ready ? fmt1(result.dim225) + ' lbs DIM' : '—'}
-                </div>
-                <div style={S.barColBill}>
-                  Billable:{' '}
-                  {result.ready ? fmt1(result.bill225) + ' lbs' : '—'}
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -547,45 +483,21 @@ export default function DimCalculator() {
 
           {/* Detail table */}
           <div style={S.dimDetail}>
-            <div style={S.dimDetailCol}>
-              {/* verbatim — prototype 3-divisor chart */}
-              <div style={{ ...S.detailCarrier, color: '#ef4444' }}>UPS / FedEx</div>
-              <div style={S.detailDivisor}>÷139 divisor</div>
-              <div style={S.detailVal}>
-                DIM: {result.ready ? fmt1(result.dim139) + ' lbs' : '—'}
+            {BAR_COLS.map((col) => (
+              <div key={col.id} style={col.best ? S.dimDetailColBest : S.dimDetailCol}>
+                {/* verbatim — prototype 3-divisor chart */}
+                <div style={{ ...S.detailCarrier, color: col.color }}>
+                  {col.id === '139' ? 'UPS / FedEx' : col.id === '166' ? 'Typical 3PL' : 'ShippingCow'}
+                </div>
+                <div style={S.detailDivisor}>÷{col.id} divisor</div>
+                <div style={S.detailVal}>
+                  DIM: {result.ready ? fmt1(col.dim) + ' lbs' : '—'}
+                </div>
+                <div style={{ ...S.detailVal, ...(col.best ? { color: col.color } : {}) }}>
+                  Bill: {result.ready ? fmt1(col.bill) + ' lbs' : '—'}
+                </div>
               </div>
-              <div style={S.detailVal}>
-                Bill: {result.ready ? fmt1(result.bill139) + ' lbs' : '—'}
-              </div>
-            </div>
-            <div style={S.dimDetailCol}>
-              {/* verbatim — prototype 3-divisor chart */}
-              <div style={{ ...S.detailCarrier, color: '#f97316' }}>Typical 3PL</div>
-              <div style={S.detailDivisor}>÷166 divisor</div>
-              <div style={S.detailVal}>
-                DIM: {result.ready ? fmt1(result.dim166) + ' lbs' : '—'}
-              </div>
-              <div style={S.detailVal}>
-                Bill: {result.ready ? fmt1(result.bill166) + ' lbs' : '—'}
-              </div>
-            </div>
-            <div style={S.dimDetailColBest}>
-              {/* verbatim — prototype 3-divisor chart */}
-              <div style={{ ...S.detailCarrier, color: '#059669' }}>ShippingCow</div>
-              <div style={S.detailDivisor}>÷225 divisor</div>
-              <div style={S.detailVal}>
-                DIM: {result.ready ? fmt1(result.dim225) + ' lbs' : '—'}
-              </div>
-              <div
-                style={{
-                  ...S.detailVal,
-                  // verbatim — prototype 3-divisor chart
-                  color: '#059669',
-                }}
-              >
-                Bill: {result.ready ? fmt1(result.bill225) + ' lbs' : '—'}
-              </div>
-            </div>
+            ))}
           </div>
 
           {/* CTAs */}

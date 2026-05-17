@@ -770,10 +770,10 @@ export default function HomePage() {
 
       {/* === B.4 Tools Section (homepage port) === */}
       {/* Source: homepage/shipping cow home page(1).html lines 456–563 */}
-      <section style={S.toolsSection} id="tools">
+      <section style={S.toolsSection} id="tools" aria-labelledby="tools-heading">
         <div style={S.toolsContainer}>
           <div style={S.toolsHead}>
-            <h2 style={S.toolsH2}>
+            <h2 id="tools-heading" style={S.toolsH2}>
               See Your Savings{' '}
               <span style={S.toolsH2Accent}>Before You Sign Anything</span>
             </h2>

@@ -11,3 +11,9 @@
   ::-webkit-scrollbar-thumb { background: #1A202C; border: 2px solid #F4F7FF; }
   ::-webkit-scrollbar-thumb:hover { background: #0052C9; }
 }
+
+/* Cow wiggle animation — referenced by S.heroCow in app/page.tsx (homepage port) */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  50%       { transform: rotate(-3deg); }
+}

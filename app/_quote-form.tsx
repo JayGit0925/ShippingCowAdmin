@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { CSSProperties } from 'react';
 import { BRAND, px, FONT } from '@/lib/brand';
 
-type Status = 'idle' | 'loading' | 'done' | 'error';
+type Status = 'idle' | 'loading' | 'error';
 
 interface FormState {
   name: string;
@@ -39,6 +40,7 @@ const labelStyle: CSSProperties = {
 };
 
 export default function QuoteForm() {
+  const router = useRouter();
   const [status, setStatus] = useState<Status>('idle');
   const [form, setForm] = useState<FormState>({
     name: '',
@@ -87,50 +89,13 @@ export default function QuoteForm() {
       });
 
       if (res.ok) {
-        setStatus('done');
+        router.push('/quote/submitted');
       } else {
         setStatus('error');
       }
     } catch {
       setStatus('error');
     }
-  }
-
-  if (status === 'done') {
-    return (
-      <div
-        style={{
-          border: `3px solid ${BRAND.charcoal}`,
-          boxShadow: px(BRAND.green),
-          background: BRAND.white,
-          padding: 32,
-          maxWidth: 640,
-        }}
-      >
-        <h3
-          style={{
-            fontFamily: FONT.display,
-            fontSize: 22,
-            textTransform: 'uppercase',
-            color: BRAND.charcoal,
-            margin: '0 0 12px',
-          }}
-        >
-          Request sent.
-        </h3>
-        <p
-          style={{
-            fontFamily: FONT.body,
-            fontSize: 14,
-            opacity: 0.6,
-            margin: 0,
-            lineHeight: 1.6,
-          }}
-        >
-          We&apos;ll email your rate within 24 hours. Check your inbox.
-        </p>
-      </div>
-    );
   }
 
   return (

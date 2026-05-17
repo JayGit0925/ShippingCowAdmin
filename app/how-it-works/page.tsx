@@ -43,7 +43,7 @@ const S = {
     textTransform: 'uppercase' as const,
   } satisfies CSSProperties,
 
-  siloH2: {
+  siloH1: {
     fontFamily: FONT.display,
     fontSize: 'clamp(1.8rem, 3vw, 2.5rem)',
     textTransform: 'uppercase' as const,
@@ -143,13 +143,6 @@ const S = {
     border: `3px solid ${BRAND.charcoal}`,
     boxShadow: px(),
     overflow: 'hidden',
-  } satisfies CSSProperties,
-
-  dimCardHeader: {
-    padding: '12px 16px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
   } satisfies CSSProperties,
 
   dimCardHeaderYellow: {
@@ -399,16 +392,6 @@ const S = {
     margin: 0,
   } satisfies CSSProperties,
 
-  hiwStepConnector: {
-    fontFamily: FONT.pixel,
-    fontSize: 10,
-    color: BRAND.yellow,
-    opacity: 0.4,
-    textAlign: 'center' as const,
-    alignSelf: 'center',
-    marginTop: -8,
-  } satisfies CSSProperties,
-
   hiwCta: {
     textAlign: 'center' as const,
     marginTop: 48,
@@ -653,10 +636,10 @@ export default function HowItWorksPage() {
           <div>
             <span style={S.siloTag}>Dim Factor 225</span>
 
-            <h2 style={S.siloH2}>
+            <h1 style={S.siloH1}>
               Why 225 Changes<br />
               <span style={S.siloH2Accent}>Everything.</span>
-            </h2>
+            </h1>
 
             <p style={S.siloPara}>
               The industry standard dim factor is 166 — meaning carriers charge you as if your
@@ -850,7 +833,7 @@ export default function HowItWorksPage() {
             {/* Card 1 */}
             <div style={S.insightCard}>
               <div style={S.insightCardMeta}>
-                <span style={S.insightTypeTip}>Weekly Tip</span>
+                <span style={S.insightTypeTip}>WEEKLY TIP</span>
                 <span style={S.insightBadge}>-$1.9K/mo</span>
               </div>
               <h4 style={S.insightCardH}>
@@ -871,7 +854,7 @@ export default function HowItWorksPage() {
             {/* Card 2 */}
             <div style={S.insightCard}>
               <div style={S.insightCardMeta}>
-                <span style={S.insightTypeCritical}>⚠ Critical</span>
+                <span style={S.insightTypeCritical}>⚠ CRITICAL</span>
                 <span style={S.insightBadge}>+$11.8K exposure</span>
               </div>
               <h4 style={S.insightCardH}>

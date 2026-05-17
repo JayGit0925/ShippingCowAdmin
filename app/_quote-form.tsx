@@ -4,17 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CSSProperties } from 'react';
 import { BRAND, px, FONT } from '@/lib/brand';
+import { buildQuotePayload } from './_quote-form.utils';
+import type { FormState } from './_quote-form.utils';
 
 type Status = 'idle' | 'loading' | 'error';
-
-interface FormState {
-  name: string;
-  company: string;
-  email: string;
-  item_type: string;
-  weight_lbs: string;
-  origin_zip: string;
-}
 
 const inputStyle: CSSProperties = {
   fontFamily: FONT.body,
@@ -61,25 +54,7 @@ export default function QuoteForm() {
     e.preventDefault();
     setStatus('loading');
 
-    const payload: {
-      name: string;
-      company?: string;
-      email: string;
-      item_type?: string;
-      weight_lbs?: number;
-      origin_zip?: string;
-    } = {
-      name: form.name,
-      email: form.email,
-    };
-
-    if (form.company.trim()) payload.company = form.company.trim();
-    if (form.item_type.trim()) payload.item_type = form.item_type.trim();
-    if (form.weight_lbs.trim()) {
-      const parsed = parseInt(form.weight_lbs, 10);
-      if (!isNaN(parsed)) payload.weight_lbs = parsed;
-    }
-    if (form.origin_zip.trim()) payload.origin_zip = form.origin_zip.trim();
+    const payload = buildQuotePayload(form);
 
     try {
       const res = await fetch('/api/quote-request', {
@@ -123,6 +98,7 @@ export default function QuoteForm() {
           <input
             style={inputStyle}
             type="text"
+            name="name"
             required
             value={form.name}
             onChange={handleChange('name')}
@@ -134,6 +110,7 @@ export default function QuoteForm() {
           <input
             style={inputStyle}
             type="text"
+            name="company"
             value={form.company}
             onChange={handleChange('company')}
             placeholder="Acme Co."
@@ -147,6 +124,7 @@ export default function QuoteForm() {
         <input
           style={inputStyle}
           type="email"
+          name="email"
           required
           value={form.email}
           onChange={handleChange('email')}
@@ -168,6 +146,7 @@ export default function QuoteForm() {
           <input
             style={inputStyle}
             type="text"
+            name="item_type"
             value={form.item_type}
             onChange={handleChange('item_type')}
             placeholder="Sofa, dresser…"
@@ -178,6 +157,7 @@ export default function QuoteForm() {
           <input
             style={inputStyle}
             type="number"
+            name="weight_lbs"
             min={10}
             max={500}
             value={form.weight_lbs}
@@ -190,6 +170,7 @@ export default function QuoteForm() {
           <input
             style={inputStyle}
             type="text"
+            name="origin_zip"
             value={form.origin_zip}
             onChange={handleChange('origin_zip')}
             placeholder="10001"

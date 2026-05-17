@@ -90,10 +90,20 @@ export function PublicNav({ currentPath }: { currentPath?: string }) {
         >
           Pricing
         </a>
+        {/* TODO: remove "Launch" link after DM batch rotates to homepage URLs */}
+        <a
+          href="/launch"
+          style={{
+            ...S.navLink,
+            borderBottom: isActive('/launch') ? `3px solid ${BRAND.yellow}` : '3px solid transparent',
+          }}
+        >
+          Launch
+        </a>
       </div>
       <div style={S.navRight}>
         <a href="/login" style={S.navLogin}>Login</a>
-        <a href={currentPath === '/' ? '#quote' : '/'} style={S.navCta}>Get a Quote →</a>
+        <a href={currentPath === '/' ? '#inquiry' : '/#inquiry'} style={S.navCta}>Get a Quote →</a>
       </div>
     </nav>
   );

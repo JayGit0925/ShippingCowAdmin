@@ -1,8 +1,14 @@
+import type { Metadata } from 'next';
 import type { CSSProperties } from 'react';
 import { BRAND, px, pxSm, FONT } from '@/lib/brand';
 import { PublicLayout } from '@/components/shell/public-layout';
 import DimCalculator from './_dim-calculator';
 import ShrinkCalculator from './_shrink-calculator';
+
+export const metadata: Metadata = {
+  title: 'Moo-ve Your Heavy Goods Without Getting Milked',
+  description: 'AI-powered 3PL for 50–149lb items. Up to 80% off FedEx rates with DIM 225, zone-skip routing, and zero shrinkage. Built for Shopify & TikTok Shop sellers.',
+};
 
 // === Hero (homepage port) ===
 // Source: homepage/shipping cow home page(1).html lines 406-438

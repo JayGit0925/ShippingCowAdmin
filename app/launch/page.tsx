@@ -1,8 +1,14 @@
+import type { Metadata } from 'next';
 import type { CSSProperties } from 'react';
 import { BRAND, px, FONT } from '@/lib/brand';
 import { PublicLayout } from '@/components/shell/public-layout';
 import RateCalculator from './_rate-calculator';
 import QuoteForm from './_quote-form';
+
+export const metadata: Metadata = {
+  title: 'Stop Getting Milked on Heavy Freight',
+  description: 'Most 50lb+ sellers bleed $1,500–$4,000/month on DIM overcharges, bad carrier zones, and 3PL shrinkage. Mooovy AI spots it in minutes — free audit, 24-hour turnaround.',
+};
 
 // ── Editable constant — shown in live badge ──────────────────────────────────
 const SELLERS_AUDITED_THIS_WEEK = 14;

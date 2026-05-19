@@ -53,7 +53,7 @@ export function ConfirmActionButton({
           }}
         >
           <Card style={{ width: 480, padding: 28, background: BRAND.white }}>
-            <Eyebrow>// CONFIRM ACTION</Eyebrow>
+            <Eyebrow>{'// CONFIRM ACTION'}</Eyebrow>
             <div
               style={{
                 fontFamily: "'Black Han Sans', sans-serif",
@@ -79,7 +79,7 @@ export function ConfirmActionButton({
             </div>
             <div style={{ marginBottom: 16 }}>
               <Eyebrow style={{ marginBottom: 6 }}>
-                // TYPE &ldquo;{confirmWord}&rdquo; TO CONFIRM
+                {'// TYPE '}&ldquo;{confirmWord}&rdquo;{' TO CONFIRM'}
               </Eyebrow>
               <input
                 autoFocus

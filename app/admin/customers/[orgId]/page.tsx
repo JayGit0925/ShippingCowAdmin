@@ -237,7 +237,7 @@ function MembersTable({ members }: { members: MemberRow[] }) {
   if (members.length === 0) return null;
   return (
     <div>
-      <Eyebrow style={{ marginBottom: 8 }}>// MEMBERS</Eyebrow>
+      <Eyebrow style={{ marginBottom: 8 }}>{'// MEMBERS'}</Eyebrow>
       <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
         {members.map((m) => (
           <li

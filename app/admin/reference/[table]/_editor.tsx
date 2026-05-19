@@ -444,7 +444,7 @@ export function ReferenceEditor({
                     letterSpacing: '0.04em',
                   }}
                 >
-                  // UNSAVED DRAFT
+                  {'// UNSAVED DRAFT'}
                 </span>
               ) : null}
               {draftId ? (
@@ -456,7 +456,7 @@ export function ReferenceEditor({
                     letterSpacing: '0.04em',
                   }}
                 >
-                  // DRAFT {draftId.slice(0, 8).toUpperCase()}
+                  {'// DRAFT '}{draftId.slice(0, 8).toUpperCase()}
                 </span>
               ) : null}
             </div>
@@ -770,7 +770,7 @@ export function ReferenceEditor({
         {step === 'review' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <Eyebrow style={{ marginBottom: 10 }}>
-              // IMPACT PREVIEW — TOP ORGS BY VOLUME
+              {'// IMPACT PREVIEW — TOP ORGS BY VOLUME'}
             </Eyebrow>
 
             {impactRows && impactRows.length > 0 ? (
@@ -947,7 +947,7 @@ export function ReferenceEditor({
                       marginBottom: 6,
                     }}
                   >
-                    // PUBLISH NOTE (REQUIRED)
+                    {'// PUBLISH NOTE (REQUIRED)'}
                   </label>
                   <textarea
                     value={publishNote}

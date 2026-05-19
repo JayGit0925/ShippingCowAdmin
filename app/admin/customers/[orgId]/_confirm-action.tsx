@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { BRAND } from '@/lib/brand';
 import { Button } from '@/components/ui/button';
 import { Eyebrow } from '@/components/ui/eyebrow';
@@ -26,12 +26,10 @@ export function ConfirmActionButton({
 }: ConfirmActionProps) {
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleOpen = () => {
     setTyped('');
     setOpen(true);
-    setTimeout(() => inputRef.current?.focus(), 50);
   };
 
   const confirmed = typed === confirmWord;
@@ -70,7 +68,7 @@ export function ConfirmActionButton({
             <div
               style={{
                 background: '#FEF3C7',
-                border: `3px solid ${BRAND.amber ?? '#F59E0B'}`,
+                border: `3px solid ${BRAND.amber}`,
                 padding: 12,
                 marginBottom: 16,
                 fontFamily: "'DM Sans', sans-serif",
@@ -84,7 +82,7 @@ export function ConfirmActionButton({
                 // TYPE &ldquo;{confirmWord}&rdquo; TO CONFIRM
               </Eyebrow>
               <input
-                ref={inputRef}
+                autoFocus
                 type="text"
                 value={typed}
                 onChange={(e) => setTyped(e.target.value)}

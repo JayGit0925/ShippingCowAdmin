@@ -42,18 +42,36 @@ export function AdminList({ admins }: { admins: Array<Record<string, unknown>> }
   const [err, setErr] = useState<string | null>(null);
   const [newUserId, setNewUserId] = useState('');
   const [newRole, setNewRole] = useState<RoleValue>('support-admin');
+  // Typed confirmation state: userId being deactivated → typed text
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [confirmText, setConfirmText] = useState('');
 
-  async function deactivate(userId: string) {
-    if (!confirm(`Deactivate admin ${userId.slice(0, 8)}?`)) return;
-    setBusy(userId);
+  function startDeactivate(userId: string) {
+    setConfirmingId(userId);
+    setConfirmText('');
+    setErr(null);
+  }
+
+  function cancelDeactivate() {
+    setConfirmingId(null);
+    setConfirmText('');
+  }
+
+  async function confirmDeactivate() {
+    if (!confirmingId) return;
+    setBusy(confirmingId);
     setErr(null);
     try {
-      const res = await fetch(`/api/admin/security/admins/${userId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/security/admins/${confirmingId}/deactivate`, {
+        method: 'POST',
+      });
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
         setErr(data?.error ?? `HTTP ${res.status}`);
         return;
       }
+      setConfirmingId(null);
+      setConfirmText('');
       router.refresh();
     } finally {
       setBusy(null);
@@ -178,14 +196,57 @@ export function AdminList({ admins }: { admins: Array<Record<string, unknown>> }
                   </div>
                 </div>
                 {isActive && userId ? (
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => deactivate(userId)}
-                    disabled={busy === userId}
-                  >
-                    Deactivate
-                  </Button>
+                  confirmingId === userId ? (
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 6,
+                        alignItems: 'flex-end',
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontFamily: "'DM Sans', sans-serif",
+                          fontSize: 12,
+                          color: BRAND.charcoal,
+                          margin: 0,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        Type <code style={{ background: BRAND.pageBed, border: `2px solid ${BRAND.charcoal}`, padding: '1px 4px', fontSize: 12 }}>DEACTIVATE</code> to confirm
+                      </p>
+                      <input
+                        placeholder="DEACTIVATE"
+                        value={confirmText}
+                        onChange={(e) => setConfirmText(e.target.value)}
+                        style={{ ...inputStyle, width: 160 }}
+                        autoFocus
+                      />
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <Button variant="ghost" size="sm" onClick={cancelDeactivate}>
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={confirmDeactivate}
+                          disabled={confirmText !== 'DEACTIVATE' || busy === userId}
+                        >
+                          {busy === userId ? 'Working…' : 'Confirm'}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => startDeactivate(userId)}
+                      disabled={busy === userId}
+                    >
+                      Deactivate
+                    </Button>
+                  )
                 ) : null}
               </div>
             </Card>

@@ -43,12 +43,19 @@ export async function SuspiciousSessions() {
 
   if (sessions.length === 0) {
     return (
-      <Card style={{ padding: 18 }}>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: BRAND.charcoal }}>
-          No session data (last 7d). The `user_sessions` table is owned by the user portal —
-          if absent, this section will populate once user-portal migrations land.
-        </p>
-      </Card>
+      <div
+        style={{
+          border: `3px solid ${BRAND.amber}`,
+          background: '#FEF3C7',
+          color: '#92400E',
+          padding: '12px 16px',
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: 13,
+        }}
+      >
+        <strong>Suspicious session detection requires the user portal migration to be applied.</strong>{' '}
+        The <code style={{ fontSize: 12 }}>user_sessions</code> table is owned by the user portal — this section will populate once user-portal migrations land.
+      </div>
     );
   }
 

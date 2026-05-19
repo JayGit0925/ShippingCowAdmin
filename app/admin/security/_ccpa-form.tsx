@@ -47,10 +47,14 @@ const labelStyle: CSSProperties = {
   marginTop: 8,
 };
 
+const ERASURE_REASONS = ['User Request', 'Legal Order', 'Test Account'] as const;
+type ErasureReason = (typeof ERASURE_REASONS)[number];
+
 export function CcpaForm() {
   const [step, setStep] = useState<Step>('input');
   const [orgId, setOrgId] = useState('');
-  const [reason, setReason] = useState('');
+  const [email, setEmail] = useState('');
+  const [reason, setReason] = useState<ErasureReason>('User Request');
   const [ticketId, setTicketId] = useState('');
   const [preview, setPreview] = useState<CcpaPreview | null>(null);
   const [confirmText, setConfirmText] = useState('');
@@ -61,7 +65,8 @@ export function CcpaForm() {
   function reset() {
     setStep('input');
     setOrgId('');
-    setReason('');
+    setEmail('');
+    setReason('User Request');
     setTicketId('');
     setPreview(null);
     setConfirmText('');
@@ -75,17 +80,13 @@ export function CcpaForm() {
       setErr('orgId required');
       return;
     }
-    if (!reason.trim()) {
-      setErr('reason required');
-      return;
-    }
     setBusy(true);
     setErr(null);
     try {
       const res = await fetch('/api/admin/security/ccpa/preview', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ orgId: orgId.trim() }),
+        body: JSON.stringify({ orgId: orgId.trim(), email: email.trim() || undefined }),
       });
       const data = (await res.json().catch(() => null)) as
         | (CcpaPreview & { error?: string })
@@ -119,7 +120,8 @@ export function CcpaForm() {
         body: JSON.stringify({
           orgId: orgId.trim(),
           orgNameTyped: stripped,
-          reason: reason.trim(),
+          reason,
+          email: email.trim() || undefined,
           ticketId: ticketId.trim() || undefined,
         }),
       });
@@ -170,14 +172,28 @@ export function CcpaForm() {
             />
           </div>
           <div>
-            <label style={labelStyle}>REASON (REQUIRED)</label>
-            <textarea
-              placeholder="Why is this erasure being performed?"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              rows={3}
+            <label style={labelStyle}>REQUESTER EMAIL (OPTIONAL)</label>
+            <input
+              type="email"
+              placeholder="user@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               style={inputStyle}
             />
+          </div>
+          <div>
+            <label style={labelStyle}>REASON</label>
+            <select
+              value={reason}
+              onChange={(e) => setReason(e.target.value as ErasureReason)}
+              style={inputStyle}
+            >
+              {ERASURE_REASONS.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label style={labelStyle}>TICKET ID (OPTIONAL)</label>

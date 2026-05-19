@@ -16,7 +16,7 @@ export function FailedQueue({ rows }: { rows: FailedPaymentRow[] }) {
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ background: BRAND.pageBed, borderBottom: `3px solid ${BRAND.charcoal}` }}>
-            {['ORG', 'MRR', 'STRIPE CUST', 'UPDATED', 'ACTIONS'].map((h) => (
+            {['ORG', 'TIER', 'AMOUNT', 'REASON', 'TRIES', 'LAST ATTEMPT', 'ACTIONS'].map((h) => (
               <th
                 key={h}
                 style={{
@@ -38,38 +38,90 @@ export function FailedQueue({ rows }: { rows: FailedPaymentRow[] }) {
             <tr
               key={r.org_id}
               style={{
-                borderBottom: `1px solid ${BRAND.sky}`,
+                borderBottom: `1px solid ${BRAND.pageBed}`,
                 background: i % 2 ? '#FAFBFF' : BRAND.white,
               }}
             >
-              <td style={cell}>{r.org_name}</td>
-              <td style={cell}>{r.mrr != null ? `$${r.mrr.toLocaleString()}` : '—'}</td>
-              <td style={cell}>{r.stripe_customer_id ?? '—'}</td>
-              <td style={cell}>{new Date(r.updated_at).toISOString().slice(0, 10)}</td>
+              <td style={{ ...cell, fontWeight: 700 }}>{r.org_name}</td>
               <td style={cell}>
-                <form
-                  action={`/api/admin/billing/retry` as Route}
-                  method="post"
-                  style={{ display: 'inline-flex', gap: 6 }}
-                >
-                  <input type="hidden" name="stripeCustomerId" value={r.stripe_customer_id ?? ''} />
-                  <input type="hidden" name="orgId" value={r.org_id} />
-                  <Button variant="ghost" size="sm">Retry</Button>
-                </form>
-                <form
-                  action={`/api/admin/billing/cancel` as Route}
-                  method="post"
-                  style={{ display: 'inline-flex', gap: 6, marginLeft: 6 }}
-                >
-                  <input type="hidden" name="orgId" value={r.org_id} />
-                  <Button variant="danger" size="sm">Cancel</Button>
-                </form>
+                {r.tier ? (
+                  <span
+                    style={{
+                      fontFamily: "'Press Start 2P', monospace",
+                      fontSize: 8,
+                      padding: '3px 6px',
+                      background: BRAND.charcoal,
+                      color: BRAND.yellow,
+                      border: `2px solid ${BRAND.charcoal}`,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {r.tier}
+                  </span>
+                ) : (
+                  '—'
+                )}
+              </td>
+              <td style={{ ...cell, color: BRAND.red, fontWeight: 700 }}>
+                {r.mrr != null ? `$${r.mrr.toLocaleString()}` : '—'}
+              </td>
+              <td style={{ ...cell, color: '#6B7280' }}>{r.decline_code ?? '—'}</td>
+              <td
+                style={{
+                  ...cell,
+                  fontFamily: "'Press Start 2P', monospace",
+                  fontSize: 9,
+                  color:
+                    r.payment_retry_count != null && r.payment_retry_count >= 2
+                      ? BRAND.red
+                      : BRAND.amber,
+                }}
+              >
+                {r.payment_retry_count ?? '—'}
+              </td>
+              <td style={{ ...cell, color: '#9CA3AF' }}>
+                {new Date(r.updated_at).toISOString().slice(0, 10)}
+              </td>
+              <td style={{ ...cell, padding: '6px 12px' }}>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <form
+                    action={`/api/admin/billing/retry` as Route}
+                    method="post"
+                    style={{ display: 'inline-flex' }}
+                  >
+                    <input type="hidden" name="stripeCustomerId" value={r.stripe_customer_id ?? ''} />
+                    <input type="hidden" name="orgId" value={r.org_id} />
+                    <Button variant="primary" size="sm">
+                      Retry
+                    </Button>
+                  </form>
+                  <form
+                    action={`/api/admin/billing/extend` as Route}
+                    method="post"
+                    style={{ display: 'inline-flex' }}
+                  >
+                    <input type="hidden" name="orgId" value={r.org_id} />
+                    <Button variant="ghost" size="sm">
+                      Extend
+                    </Button>
+                  </form>
+                  <form
+                    action={`/api/admin/billing/suspend` as Route}
+                    method="post"
+                    style={{ display: 'inline-flex' }}
+                  >
+                    <input type="hidden" name="orgId" value={r.org_id} />
+                    <Button variant="danger" size="sm">
+                      Suspend
+                    </Button>
+                  </form>
+                </div>
               </td>
             </tr>
           ))}
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={5} style={{ ...cell, padding: 24, textAlign: 'center' }}>
+              <td colSpan={7} style={{ ...cell, padding: 24, textAlign: 'center' }}>
                 No failed payments.
               </td>
             </tr>

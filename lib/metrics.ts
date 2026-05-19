@@ -177,9 +177,11 @@ export async function fetchFunnel(): Promise<FunnelStages> {
 export type FailedPaymentRow = {
   org_id: string;
   org_name: string;
+  tier: string | null;
   mrr: number | null;
   stripe_customer_id: string | null;
   decline_code: string | null;
+  payment_retry_count: number | null;
   updated_at: string;
 };
 
@@ -188,7 +190,7 @@ export async function fetchFailedPaymentQueue(): Promise<FailedPaymentRow[]> {
     const supabase = adminClient();
     const { data, error } = await supabase
       .from('subscriptions')
-      .select('org_id, mrr, stripe_customer_id, updated_at, orgs!inner(name)')
+      .select('org_id, tier, mrr, stripe_customer_id, updated_at, orgs!inner(name)')
       .eq('status', 'payment_failed')
       .order('updated_at', { ascending: false })
       .limit(50);
@@ -196,9 +198,11 @@ export async function fetchFailedPaymentQueue(): Promise<FailedPaymentRow[]> {
     return (data as Array<Record<string, unknown>>).map((r) => ({
       org_id: r.org_id as string,
       org_name: (r.orgs as { name?: string } | null)?.name ?? '—',
+      tier: (r.tier as string) ?? null,
       mrr: (r.mrr as number) ?? null,
       stripe_customer_id: (r.stripe_customer_id as string) ?? null,
       decline_code: null,
+      payment_retry_count: null,
       updated_at: r.updated_at as string,
     }));
   } catch {

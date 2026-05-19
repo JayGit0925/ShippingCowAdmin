@@ -10,62 +10,58 @@ export function AuditEntryDetail({
   afterValue: unknown;
 }) {
   const [open, setOpen] = useState(false);
-  if (!beforeValue && !afterValue) return null;
+  if (beforeValue == null && afterValue == null) return null;
   return (
-    <>
+    <div>
       <button
         onClick={() => setOpen((o) => !o)}
         style={{
           fontFamily: "'Press Start 2P', monospace",
           fontSize: 8,
-          color: BRAND.blue,
+          padding: '3px 8px',
+          border: `2px solid ${BRAND.charcoal}`,
           background: 'transparent',
-          border: 'none',
           cursor: 'pointer',
-          padding: 0,
+          letterSpacing: '0.03em',
         }}
       >
-        {open ? '▼ HIDE DIFF' : '▶ SHOW DIFF'}
+        {open ? 'HIDE' : 'DIFF'}
       </button>
-      {open ? (
+      {open && (
         <div
           style={{
+            marginTop: 8,
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
             gap: 8,
-            marginTop: 6,
+            fontFamily: 'monospace',
+            fontSize: 11,
           }}
         >
           <pre
             style={{
-              fontFamily: 'monospace',
-              fontSize: 11,
-              background: BRAND.pageBed,
-              border: `2px solid ${BRAND.charcoal}`,
+              background: '#FFF0F0',
               padding: 8,
-              maxHeight: 200,
-              overflow: 'auto',
-              margin: 0,
+              border: `1px solid ${BRAND.red}`,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-all',
             }}
           >
-            {JSON.stringify(beforeValue ?? {}, null, 2)}
+            {beforeValue != null ? JSON.stringify(beforeValue, null, 2) : '—'}
           </pre>
           <pre
             style={{
-              fontFamily: 'monospace',
-              fontSize: 11,
-              background: BRAND.pageBed,
-              border: `2px solid ${BRAND.charcoal}`,
+              background: '#F0FFF4',
               padding: 8,
-              maxHeight: 200,
-              overflow: 'auto',
-              margin: 0,
+              border: `1px solid ${BRAND.green}`,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-all',
             }}
           >
-            {JSON.stringify(afterValue ?? {}, null, 2)}
+            {afterValue != null ? JSON.stringify(afterValue, null, 2) : '—'}
           </pre>
         </div>
-      ) : null}
-    </>
+      )}
+    </div>
   );
 }

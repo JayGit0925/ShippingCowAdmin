@@ -3,6 +3,7 @@ import { BRAND } from '@/lib/brand';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Eyebrow } from '@/components/ui/eyebrow';
+import { ReplyForm } from './_reply-form';
 
 export type ThreadMessage = {
   id: string;
@@ -122,40 +123,13 @@ export function Thread({
       </div>
 
       <Card style={{ padding: 14 }}>
-        <form
-          action={`/api/admin/tickets/${header.id}/reply` as Route}
-          method="post"
-          style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
-        >
-          <textarea
-            name="body"
-            required
-            placeholder="Reply or internal note…"
-            rows={4}
-            style={{
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: 14,
-              padding: 10,
-              border: `3px solid ${BRAND.charcoal}`,
-              background: BRAND.white,
-              outline: 'none',
-              borderRadius: 0,
-            }}
-          />
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <select name="from_type" defaultValue="admin" style={selectStyle}>
-              <option value="admin">Public reply</option>
-              <option value="note">Internal note</option>
-            </select>
-            <Button variant="primary" size="sm">Send</Button>
-          </div>
-        </form>
+        <ReplyForm ticketId={header.id} />
       </Card>
     </div>
   );
 }
 
-const selectStyle: React.CSSProperties = {
+const selectStyle: import('react').CSSProperties = {
   fontFamily: "'DM Sans', sans-serif",
   fontSize: 13,
   padding: '4px 8px',

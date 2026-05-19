@@ -16,7 +16,7 @@ export function FailedQueue({ rows }: { rows: FailedPaymentRow[] }) {
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ background: BRAND.pageBed, borderBottom: `3px solid ${BRAND.charcoal}` }}>
-            {['ORG', 'TIER', 'AMOUNT', 'REASON', 'TRIES', 'LAST ATTEMPT', 'ACTIONS'].map((h) => (
+            {['ORG', 'AMOUNT', 'ATTEMPTS', 'LAST ATTEMPT', 'ACTIONS'].map((h) => (
               <th
                 key={h}
                 style={{
@@ -43,29 +43,9 @@ export function FailedQueue({ rows }: { rows: FailedPaymentRow[] }) {
               }}
             >
               <td style={{ ...cell, fontWeight: 700 }}>{r.org_name}</td>
-              <td style={cell}>
-                {r.tier ? (
-                  <span
-                    style={{
-                      fontFamily: "'Press Start 2P', monospace",
-                      fontSize: 8,
-                      padding: '3px 6px',
-                      background: BRAND.charcoal,
-                      color: BRAND.yellow,
-                      border: `2px solid ${BRAND.charcoal}`,
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    {r.tier}
-                  </span>
-                ) : (
-                  '—'
-                )}
-              </td>
               <td style={{ ...cell, color: BRAND.red, fontWeight: 700 }}>
                 {r.mrr != null ? `$${r.mrr.toLocaleString()}` : '—'}
               </td>
-              <td style={{ ...cell, color: '#6B7280' }}>{r.decline_code ?? '—'}</td>
               <td
                 style={{
                   ...cell,
@@ -96,23 +76,13 @@ export function FailedQueue({ rows }: { rows: FailedPaymentRow[] }) {
                     </Button>
                   </form>
                   <form
-                    action={`/api/admin/billing/extend` as Route}
+                    action={`/api/admin/billing/waive` as Route}
                     method="post"
                     style={{ display: 'inline-flex' }}
                   >
                     <input type="hidden" name="orgId" value={r.org_id} />
                     <Button variant="ghost" size="sm">
-                      Extend
-                    </Button>
-                  </form>
-                  <form
-                    action={`/api/admin/billing/suspend` as Route}
-                    method="post"
-                    style={{ display: 'inline-flex' }}
-                  >
-                    <input type="hidden" name="orgId" value={r.org_id} />
-                    <Button variant="danger" size="sm">
-                      Suspend
+                      Waive
                     </Button>
                   </form>
                 </div>
@@ -121,7 +91,7 @@ export function FailedQueue({ rows }: { rows: FailedPaymentRow[] }) {
           ))}
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={7} style={{ ...cell, padding: 24, textAlign: 'center' }}>
+              <td colSpan={5} style={{ ...cell, padding: 24, textAlign: 'center' }}>
                 No failed payments.
               </td>
             </tr>

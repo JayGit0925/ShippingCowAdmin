@@ -132,9 +132,11 @@ export async function fetchMrrSeries(): Promise<MrrSeriesPoint[]> {
 }
 
 export type FunnelStages = {
-  calf_signups: number;
-  first_uploads: number;
-  upgraded_to_cow: number;
+  visits: number;
+  quotes: number;
+  trials: number;
+  paid: number;
+  expanded: number;
   degraded: boolean;
 };
 
@@ -142,35 +144,46 @@ export async function fetchFunnel(): Promise<FunnelStages> {
   try {
     const supabase = adminClient();
     const cutoff = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
-    const [signupsRes, uploadsRes, upgradesRes] = await Promise.all([
+    const [visitsRes, quotesRes, trialsRes, paidRes, expandedRes] = await Promise.all([
       supabase
         .from('subscription_events')
         .select('*', { count: 'exact', head: true })
-        .eq('event_type', 'calf_signup')
-        .gte('created_at', cutoff),
-      supabase
-        .from('subscription_events')
-        .select('org_id', { count: 'exact', head: true })
-        .eq('event_type', 'first_upload')
+        .eq('event_type', 'visit')
         .gte('created_at', cutoff),
       supabase
         .from('subscription_events')
         .select('*', { count: 'exact', head: true })
-        .eq('event_type', 'upgrade')
-        .eq('from_tier', 'calf')
+        .eq('event_type', 'quote_requested')
+        .gte('created_at', cutoff),
+      supabase
+        .from('subscription_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_type', 'trial_started')
+        .gte('created_at', cutoff),
+      supabase
+        .from('subscription_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_type', 'converted_to_paid')
+        .gte('created_at', cutoff),
+      supabase
+        .from('subscription_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_type', 'expansion')
         .gte('created_at', cutoff),
     ]);
-    if (signupsRes.error || uploadsRes.error || upgradesRes.error) {
-      return { calf_signups: 0, first_uploads: 0, upgraded_to_cow: 0, degraded: true };
+    if (visitsRes.error || quotesRes.error || trialsRes.error || paidRes.error || expandedRes.error) {
+      return { visits: 0, quotes: 0, trials: 0, paid: 0, expanded: 0, degraded: true };
     }
     return {
-      calf_signups: signupsRes.count ?? 0,
-      first_uploads: uploadsRes.count ?? 0,
-      upgraded_to_cow: upgradesRes.count ?? 0,
+      visits: visitsRes.count ?? 0,
+      quotes: quotesRes.count ?? 0,
+      trials: trialsRes.count ?? 0,
+      paid: paidRes.count ?? 0,
+      expanded: expandedRes.count ?? 0,
       degraded: false,
     };
   } catch {
-    return { calf_signups: 0, first_uploads: 0, upgraded_to_cow: 0, degraded: true };
+    return { visits: 0, quotes: 0, trials: 0, paid: 0, expanded: 0, degraded: true };
   }
 }
 

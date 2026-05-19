@@ -2,24 +2,29 @@ import { Card } from '@/components/ui/card';
 import { BRAND } from '@/lib/brand';
 import type { FunnelStages } from '@/lib/metrics';
 
+const STEPS: { key: keyof Omit<FunnelStages, 'degraded'>; label: string; color: string }[] = [
+  { key: 'visits',   label: 'VISITS',   color: BRAND.charcoal },
+  { key: 'quotes',   label: 'QUOTES',   color: BRAND.blue },
+  { key: 'trials',   label: 'TRIALS',   color: BRAND.yellow },
+  { key: 'paid',     label: 'PAID',     color: '#10B981' },
+  { key: 'expanded', label: 'EXPANDED', color: BRAND.amber },
+];
+
 export function Funnel({ stages }: { stages: FunnelStages }) {
-  const items = [
-    { label: 'CALF SIGNUPS', value: stages.calf_signups, color: BRAND.charcoal },
-    { label: 'FIRST UPLOAD', value: stages.first_uploads, color: BRAND.blue },
-    { label: 'UPGRADED TO COW', value: stages.upgraded_to_cow, color: BRAND.yellow },
-  ];
-  const base = Math.max(1, items[0].value);
+  const base = Math.max(1, stages.visits);
   return (
     <Card style={{ padding: 18 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {items.map((it, idx) => {
-          const pct = Math.round((it.value / base) * 1000) / 10;
+        {STEPS.map((step, idx) => {
+          const value = stages[step.key];
+          const barPct = Math.round((value / base) * 1000) / 10;
+          const prevValue = idx > 0 ? stages[STEPS[idx - 1].key] : null;
           const convPct =
-            idx > 0
-              ? Math.round((it.value / Math.max(1, items[idx - 1].value)) * 1000) / 10
+            prevValue !== null
+              ? Math.round((value / Math.max(1, prevValue)) * 1000) / 10
               : null;
           return (
-            <div key={it.label}>
+            <div key={step.key}>
               {convPct !== null && (
                 <div
                   style={{
@@ -48,7 +53,7 @@ export function Funnel({ stages }: { stages: FunnelStages }) {
                     fontWeight: 600,
                   }}
                 >
-                  {it.label}
+                  {step.label}
                 </span>
                 <span
                   style={{
@@ -57,7 +62,7 @@ export function Funnel({ stages }: { stages: FunnelStages }) {
                     color: BRAND.blue,
                   }}
                 >
-                  {it.value.toLocaleString()}
+                  {value.toLocaleString()}
                 </span>
               </div>
               <div
@@ -71,8 +76,8 @@ export function Funnel({ stages }: { stages: FunnelStages }) {
                 <div
                   style={{
                     height: '100%',
-                    width: `${Math.max(2, pct)}%`,
-                    background: it.color,
+                    width: `${Math.max(2, barPct)}%`,
+                    background: step.color,
                   }}
                 />
                 <span
@@ -86,7 +91,7 @@ export function Funnel({ stages }: { stages: FunnelStages }) {
                     color: '#9CA3AF',
                   }}
                 >
-                  {pct}%
+                  {barPct}%
                 </span>
               </div>
             </div>

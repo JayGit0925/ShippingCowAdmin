@@ -116,12 +116,12 @@ export function ModelPinsPanel({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: '2fr 1fr 2fr 1fr 80px',
+              gridTemplateColumns: '2fr 1fr 2fr 1fr 1fr 80px',
               padding: '8px 14px',
               background: BRAND.charcoal,
             }}
           >
-            {['ORG (NULL=GLOBAL)', 'ROLE', 'MODEL STRING', 'PINNED BY', 'ACTIONS'].map((h) => (
+            {['ORG (NULL=GLOBAL)', 'ROLE', 'MODEL STRING', 'PINNED AT', 'PINNED BY', 'ACTIONS'].map((h) => (
               <span
                 key={h}
                 style={{
@@ -154,12 +154,16 @@ export function ModelPinsPanel({
               const model = asString(pin.model_string) ?? '';
               const orgIdVal = asString(pin.org_id);
               const pinnedBy = asString(pin.pinned_by) ?? asString(pin.updated_by) ?? '—';
+              const pinnedAtRaw = asString(pin.pinned_at) ?? asString(pin.created_at);
+              const pinnedAt = pinnedAtRaw
+                ? new Date(pinnedAtRaw).toLocaleDateString()
+                : '—';
               return (
                 <div
                   key={id}
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: '2fr 1fr 2fr 1fr 80px',
+                    gridTemplateColumns: '2fr 1fr 2fr 1fr 1fr 80px',
                     padding: '10px 14px',
                     borderBottom: `1px solid ${BRAND.pageBed}`,
                     alignItems: 'center',
@@ -192,6 +196,15 @@ export function ModelPinsPanel({
                     }}
                   >
                     {model}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: 12,
+                      color: '#9CA3AF',
+                    }}
+                  >
+                    {pinnedAt}
                   </span>
                   <span
                     style={{

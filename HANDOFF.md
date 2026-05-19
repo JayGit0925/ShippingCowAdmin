@@ -1,9 +1,9 @@
 # HANDOFF — ShippingCow Admin Portal
 
-Last updated: 2026-05-11
+Last updated: 2026-05-18
 Branch: `master` (pushed to `https://github.com/JayGit0925/ShippingCowAdmin`)
-Project root: `C:\Users\andyg\OneDrive\Desktop\github\shippingcowadmin`
-Spec (authoritative): `admin handoff v1(1).md` (WARNING: deleted locally — see below)
+Project root: `/Users/jayos/code/shippingcow-admin`
+Spec (authoritative): `admin handoff v1(1).md`
 
 ---
 
@@ -13,31 +13,60 @@ Build the ShippingCow Admin Portal — internal Next.js 14 admin surface for Shi
 
 ---
 
-## Status: All 5 phases code-complete + pushed to GitHub
+## Status: All phases + workstreams complete — 33 e2e + 163 unit tests pass
 
 | Phase | Surface | Code | Live gate |
 |---|---|---|---|
-| A.1 | Foundation scaffold + auth middleware + audit log + 8 placeholder routes | DONE | — |
-| A.2 | `/login` form + `/admin/setup-mfa` TOTP enrollment | DONE | GREEN (smoke-tested) |
-| B.1 | Reference data schema + read-only `/admin/reference` UI | DONE | DEPENDS on migration 0002 |
-| B.2 | Rate card editor + 4-step publish workflow + history page | DONE | AMBER (mv_org_cost_summary in user-portal repo) |
-| C | `/admin/customers` + drawer + 7 org actions + `/admin/tickets` + 4 ticket actions | DONE | AMBER (cross-repo email/banner) |
-| D | `/admin` (Dashboard) + `/admin/revenue` + 4 Stripe action handlers | DONE | AMBER (`STRIPE_SECRET_KEY` not set; routes return 503) |
-| E | `/admin/platform` + `/admin/audit` + `/admin/security` + 13 routes | DONE | GREEN |
+| A.1 | Foundation + auth + audit + 8 routes | DONE | GREEN |
+| A.2 | /login + /admin/setup-mfa TOTP | DONE | GREEN |
+| B.1 | Reference data schema + read-only /admin/reference | DONE | DEPENDS on migration 0002 |
+| B.2 | Rate card editor + 4-step publish workflow | DONE | GREEN (4-step editor complete) |
+| C | /admin/customers + /admin/tickets | DONE | GREEN |
+| D | Dashboard + Revenue + Stripe handlers | DONE | AMBER (STRIPE_SECRET_KEY not set) |
+| E | Platform + Audit + Security | DONE | GREEN |
+| WS A | Brand tokens + Tailwind | DONE | GREEN |
+| WS B | Homepage HTML port at / | DONE | GREEN |
+| WS C | Admin portal drift — all 8 sections | DONE | GREEN |
+| E2E | Full test coverage | DONE | GREEN |
 
-~50 routes total. Typecheck clean. `npm run build` green.
+~50 routes total. Build: clean (`npm run build` exits 0). Tests: 33 e2e + 163 unit all pass. 22 commits pushed to master on 2026-05-18.
 
 ---
 
-## Session 2026-05-11 Changes
+## Session 2026-05-18 Changes
 
-- **Fixed git remote URL.** Was wrong (`shippingcow/ShippingCowAdmin`) — corrected to `JayGit0925/ShippingCowAdmin`. GitHub has the repo at `https://github.com/JayGit0925/ShippingCowAdmin`.
-- **Pushed code to GitHub.** First successful push — all 10 commits now on remote.
-- **`admin handoff v1(1).md` is deleted locally (unstaged).** This was the primary spec doc. The deletion is NOT committed. To restore: `git restore "admin handoff v1(1).md"`. Do this before any spec-sensitive work.
-- **Untracked clutter in working tree:**
-  - `artifacts/` — marketing images (Mother's Day poster, philosophy doc). Unrelated to app.
-  - `pixel-bull-duel.html` — mini-game. Unrelated to app.
-  - Decide: commit these, gitignore them, or delete them.
+### WS A — Brand Drift
+
+- Added `TYPOGRAPHY`, `SPACING`, `BORDER_RADIUS`, `LETTER_SPACING`, `COLOR` exports to `lib/brand.ts`.
+- 27 unit tests in `tests/unit/brand.test.ts` — all pass.
+- Extended `tailwind.config.ts` with spacing / letterSpacing / lineHeight tokens.
+- Fixed `@calcom/embed-react` missing from `node_modules` (was in `package.json` but not installed).
+
+### E2E Testing
+
+- Created `tests/e2e/public-routes.spec.ts` (7 tests).
+- Created `tests/e2e/navigation.spec.ts` (5 tests).
+- Created `tests/e2e/admin-smoke.spec.ts` (13 tests).
+- Added quote form validation tests to `landing-flow.spec.ts`.
+- Fixed `DEV_BYPASS` in `middleware.ts` to work even when `SUPABASE_CONFIGURED=true`.
+- All 33 e2e + 163 unit tests pass.
+
+### WS C — Admin Portal Drift (all 8 sections)
+
+- **Dashboard:** `_mrr-chart.tsx` now has 3MO/6MO/12MO period selector tabs.
+- **Customers:** `_drawer-tabs.tsx` has all 5 tabs (Overview / Activity / Usage / Subscriptions / Notes); new `ConfirmActionButton` for Suspend / Override Tier with typed confirmation; 5 quick actions.
+- **Revenue:** funnel rebuilt (Visits → Quotes → Trials → Paid → Expanded with conversion rates); failed queue columns ORG · AMOUNT · ATTEMPTS · LAST ATTEMPT · ACTIONS (Retry + Waive).
+- **Reference:** `[table]` route has full 4-step publish editor (Edit → Validate → Preview Impact → Publish).
+- **Platform:** all 5 tabs aligned — Flags (table + toggle), Kill switch (modal + reason), Model pins (table + pinned_at), News queue (approve / reject), Quotas (usage table); URL `?tab=` switching confirmed.
+- **Audit:** `_entry-detail.tsx` has DIFF toggle with red/green before/after JSON view; `_filters.tsx` confirmed complete.
+- **Security:** `_admin-list.tsx` has typed DEACTIVATE confirmation; `_suspicious-sessions.tsx` shows amber notice; `_ccpa-form.tsx` has org ID + email + reason select.
+- **Tickets:** `_reply-form.tsx` has PUBLIC / INTERNAL NOTE dual-mode toggle with `#FFFBEA` background; `[ticketId]/page.tsx` fully implemented.
+
+### Session 2026-05-11 Changes (archived)
+
+- Fixed git remote URL (was `shippingcow/ShippingCowAdmin` — corrected to `JayGit0925/ShippingCowAdmin`).
+- First successful push to GitHub — all 10 commits on remote.
+- Untracked clutter (`artifacts/`, `pixel-bull-duel.html`) — still present; gitignore or commit as desired.
 
 ---
 
@@ -71,13 +100,7 @@ Build the ShippingCow Admin Portal — internal Next.js 14 admin surface for Shi
 
 ## Immediate Next Steps (priority order)
 
-### 1. Restore deleted spec doc (before anything else)
-
-```bash
-git restore "admin handoff v1(1).md"
-```
-
-### 2. Apply 4 SQL migrations to live Supabase (REQUIRED for B/C/D/E)
+### 1. Apply 4 SQL migrations to live Supabase (REQUIRED for B/C/D/E)
 
 In order. Each is idempotent. Open Supabase Dashboard → SQL Editor → New query → paste → Run.
 
@@ -90,7 +113,7 @@ supabase/migrations/0005_platform_security.sql     (Phase E)
 
 After applying — new tables: `zone_matrix, our_carrier_rates, carrier_retail_rates, our_warehousing_fees, our_logistics_fees, category_benchmarks, rate_card_drafts, scheduled_publishes, admin_notes, impersonation_sessions, support_tickets, ticket_messages, feature_flags, model_pins`.
 
-### 3. Smoke test all 8 sections
+### 2. Smoke test all 8 sections
 
 ```powershell
 npm run dev   # http://localhost:3001
@@ -117,7 +140,7 @@ GROUP BY action ORDER BY 2 DESC;
 DELETE FROM audit_log WHERE action = 'TEST';
 ```
 
-### 4. Optional: set Stripe key
+### 3. Optional: set Stripe key
 
 ```
 # .env.local
@@ -126,7 +149,7 @@ STRIPE_SECRET_KEY=sk_live_...
 
 Flips billing routes live with no code change.
 
-### 5. Optional: seed reference data
+### 4. Optional: seed reference data
 
 ```powershell
 $env:SEED_ZONE_MATRIX_CSV = "C:\path\to\zones.csv"
@@ -134,7 +157,7 @@ $env:SEED_ZONE_MATRIX_CSV = "C:\path\to\zones.csv"
 npm run seed:ingest
 ```
 
-### 6. Deal with working-tree clutter
+### 5. Optional: deal with working-tree clutter
 
 ```bash
 # Option A: commit them
@@ -179,8 +202,7 @@ git add .gitignore && git commit -m "chore: gitignore unrelated assets"
 - **`experimental.typedRoutes` enabled.** Dynamic href strings need `as Route` casts.
 - **Server component → client callback prop = build error.** Use boolean prop pattern (see `<Card interactive>`).
 - **`gstack` browser tool not set up** — can't drive dev-server smoke tests from agent side.
-- **`admin handoff v1(1).md` deleted locally (unstaged).** Restore with `git restore "admin handoff v1(1).md"` before spec-sensitive work.
-- **Git remote was misconfigured.** Was `shippingcow/ShippingCowAdmin` — fixed to `JayGit0925/ShippingCowAdmin` in 2026-05-11 session.
+- **Git remote was misconfigured** (2026-05-11 session). Was `shippingcow/ShippingCowAdmin` — corrected to `JayGit0925/ShippingCowAdmin`. Now stable.
 
 ---
 

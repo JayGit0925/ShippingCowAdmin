@@ -9,7 +9,7 @@ const SECTIONS = [
   { path: '/admin/customers', eyebrow: '// CUSTOMERS',         h1: 'Customers'   },
   { path: '/admin/revenue',   eyebrow: '// REVENUE',           h1: 'Revenue'     },
   { path: '/admin/reference', eyebrow: '// REFERENCE DATA',    h1: null          },
-  { path: '/admin/platform',  eyebrow: '// PLATFORM CONTROLS', h1: 'Platform'    },
+  { path: '/admin/platform',  eyebrow: '// 05 — PLATFORM CONTROLS', h1: 'Platform Controls'    },
   { path: '/admin/audit',     eyebrow: '// AUDIT LOG',         h1: 'Audit'       },
   { path: '/admin/security',  eyebrow: '// SECURITY',          h1: 'Security'    },
   { path: '/admin/tickets',   eyebrow: '// TICKETS',           h1: null          },

@@ -11,7 +11,36 @@ type NewsItem = {
   headline: string;
   approval_state: string;
   created_at: string;
+  severity?: string | null;
+  category?: string | null;
+  impact?: string | null;
 };
+
+const SEVERITY_COLORS: Record<string, { bg: string; text: string }> = {
+  critical: { bg: BRAND.red, text: BRAND.white },
+  high: { bg: BRAND.amber, text: BRAND.charcoal },
+  medium: { bg: BRAND.blue, text: BRAND.white },
+  low: { bg: BRAND.sky, text: BRAND.charcoal },
+};
+
+function SeverityBadge({ level }: { level: string | null | undefined }) {
+  const lvl = (level ?? 'medium').toLowerCase();
+  const colors = SEVERITY_COLORS[lvl] ?? SEVERITY_COLORS.medium;
+  return (
+    <span
+      style={{
+        fontFamily: "'Press Start 2P', monospace",
+        fontSize: 7,
+        padding: '3px 6px',
+        background: colors.bg,
+        color: colors.text,
+        border: `2px solid ${BRAND.charcoal}`,
+      }}
+    >
+      {lvl.toUpperCase()}
+    </span>
+  );
+}
 
 export function NewsQueuePanel({ items }: { items: NewsItem[] }) {
   const router = useRouter();
@@ -43,7 +72,14 @@ export function NewsQueuePanel({ items }: { items: NewsItem[] }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Eyebrow>{'// AI-GENERATED CARD REVIEW QUEUE'}</Eyebrow>
+        <Button variant="blue" size="sm">
+          + Create Manual Card
+        </Button>
+      </div>
+
       {info ? (
         <div
           style={{
@@ -71,6 +107,7 @@ export function NewsQueuePanel({ items }: { items: NewsItem[] }) {
           {err}
         </div>
       ) : null}
+
       {items.length === 0 ? (
         <Card style={{ padding: 14 }}>
           <p
@@ -86,31 +123,74 @@ export function NewsQueuePanel({ items }: { items: NewsItem[] }) {
         </Card>
       ) : (
         items.map((item) => (
-          <Card key={item.id} style={{ padding: 14 }}>
+          <Card
+            key={item.id}
+            style={{ padding: 16, borderLeft: `4px solid ${BRAND.yellow}` }}
+          >
             <div
               style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr auto',
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
                 gap: 12,
-                alignItems: 'center',
               }}
             >
-              <div>
-                <Eyebrow>
+              <div style={{ flex: 1 }}>
+                {/* Severity + category badges */}
+                <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                  <SeverityBadge level={item.severity} />
+                  {item.category ? (
+                    <span
+                      style={{
+                        fontFamily: "'Press Start 2P', monospace",
+                        fontSize: 8,
+                        padding: '3px 6px',
+                        background: `${BRAND.sky}44`,
+                        border: `2px solid ${BRAND.charcoal}`,
+                        color: BRAND.blue,
+                      }}
+                    >
+                      {item.category.toUpperCase()}
+                    </span>
+                  ) : null}
+                </div>
+
+                {/* Timestamp */}
+                <Eyebrow style={{ fontSize: 8, marginBottom: 4 }}>
                   {new Date(item.created_at).toISOString().slice(0, 16).replace('T', ' ')}
                 </Eyebrow>
+
+                {/* Headline */}
                 <div
                   style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: 14,
+                    fontFamily: "'Black Han Sans', sans-serif",
+                    fontSize: 16,
                     color: BRAND.charcoal,
-                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    lineHeight: 1.2,
+                    marginBottom: 6,
                   }}
                 >
                   {item.headline}
                 </div>
+
+                {/* Impact line */}
+                {item.impact ? (
+                  <div
+                    style={{
+                      fontFamily: "'Press Start 2P', monospace",
+                      fontSize: 8,
+                      color: BRAND.green,
+                    }}
+                  >
+                    {'// IMPACT: '}
+                    {item.impact}
+                  </div>
+                ) : null}
               </div>
-              <div style={{ display: 'flex', gap: 8 }}>
+
+              {/* Action buttons */}
+              <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                 <Button
                   variant="primary"
                   size="sm"
@@ -118,6 +198,9 @@ export function NewsQueuePanel({ items }: { items: NewsItem[] }) {
                   disabled={busy === `approve:${item.id}`}
                 >
                   Approve
+                </Button>
+                <Button variant="ghost" size="sm">
+                  Edit
                 </Button>
                 <Button
                   variant="danger"

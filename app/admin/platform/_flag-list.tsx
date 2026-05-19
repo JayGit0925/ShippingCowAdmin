@@ -1,29 +1,48 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BRAND } from '@/lib/brand';
+import { BRAND, px } from '@/lib/brand';
 import { Card } from '@/components/ui/card';
 import { Eyebrow } from '@/components/ui/eyebrow';
 import { Button } from '@/components/ui/button';
 import type { FeatureFlag } from '@/lib/feature-flags';
 
-const inputStyle = {
-  fontFamily: "'DM Sans', sans-serif",
-  fontSize: 13,
-  padding: '6px 10px',
-  border: `3px solid ${BRAND.charcoal}`,
-  background: BRAND.white,
-  color: BRAND.charcoal,
-  outline: 'none',
-  borderRadius: 0,
-  width: '100%',
-};
+const Toggle = ({ on, onChange }: { on: boolean; onChange: () => void }) => (
+  <div
+    onClick={onChange}
+    style={{
+      width: 44,
+      height: 24,
+      background: on ? BRAND.blue : '#e5e7eb',
+      border: `3px solid ${BRAND.charcoal}`,
+      cursor: 'pointer',
+      position: 'relative',
+      transition: 'background 0.15s',
+      flexShrink: 0,
+    }}
+  >
+    <div
+      style={{
+        position: 'absolute',
+        top: 1,
+        left: on ? 19 : 1,
+        width: 16,
+        height: 16,
+        background: BRAND.white,
+        border: `2px solid ${BRAND.charcoal}`,
+        transition: 'left 0.15s',
+      }}
+    />
+  </div>
+);
 
 export function FlagList({ flags }: { flags: FeatureFlag[] }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [showNewFlag, setShowNewFlag] = useState(false);
   const [newKey, setNewKey] = useState('');
+  const [killBusy, setKillBusy] = useState(false);
 
   async function upsert(flag: Partial<FeatureFlag> & { flag_key: string }) {
     setBusy(flag.flag_key);
@@ -45,48 +64,76 @@ export function FlagList({ flags }: { flags: FeatureFlag[] }) {
     }
   }
 
-  async function remove(flagKey: string) {
-    if (!confirm(`Delete flag "${flagKey}"?`)) return;
-    setBusy(flagKey);
+  async function killAll() {
+    if (!confirm('Disable ALL experimental feature flags globally? This cannot be undone without re-enabling each flag.')) return;
+    setKillBusy(true);
     setErr(null);
     try {
-      const res = await fetch(`/api/admin/platform/flags/${flagKey}`, { method: 'DELETE' });
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        setErr((data as { error?: string })?.error ?? `HTTP ${res.status}`);
-        return;
+      for (const f of flags) {
+        if (f.default_enabled) {
+          await fetch('/api/admin/platform/flags', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ flag_key: f.flag_key, default_enabled: false }),
+          });
+        }
       }
       router.refresh();
     } finally {
-      setBusy(null);
+      setKillBusy(false);
     }
+  }
+
+  async function createFlag() {
+    if (!newKey.trim()) return;
+    await upsert({ flag_key: newKey.trim(), default_enabled: false });
+    setNewKey('');
+    setShowNewFlag(false);
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <Card style={{ padding: 14 }}>
-        <Eyebrow>{'// NEW FLAG'}</Eyebrow>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 6 }}>
-          <input
-            placeholder="snake_case_key"
-            value={newKey}
-            onChange={(e) => setNewKey(e.target.value)}
-            style={{ ...inputStyle, maxWidth: 280 }}
-          />
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => {
-              if (newKey) {
-                upsert({ flag_key: newKey, default_enabled: false });
-                setNewKey('');
-              }
+      {/* Kill All banner */}
+      <div
+        style={{
+          padding: '14px 16px',
+          border: `3px solid ${BRAND.red}`,
+          borderLeft: `5px solid ${BRAND.red}`,
+          background: BRAND.white,
+          boxShadow: px(),
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <div>
+          <Eyebrow style={{ fontSize: 8, color: BRAND.red }}>{'// GLOBAL KILL SWITCH'}</Eyebrow>
+          <div
+            style={{
+              fontFamily: "'Black Han Sans', sans-serif",
+              fontSize: 16,
+              color: BRAND.charcoal,
+              textTransform: 'uppercase',
             }}
           >
-            Create
-          </Button>
+            Disable All Experimental Features
+          </div>
+          <div
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 12,
+              color: '#6B7280',
+              marginTop: 2,
+            }}
+          >
+            Overrides all feature flags to false globally.
+          </div>
         </div>
-      </Card>
+        <Button variant="danger" size="sm" onClick={killAll} disabled={killBusy}>
+          KILL ALL
+        </Button>
+      </div>
+
       {err ? (
         <div
           style={{
@@ -100,112 +147,175 @@ export function FlagList({ flags }: { flags: FeatureFlag[] }) {
           {err}
         </div>
       ) : null}
-      {flags.map((f) => (
-        <Card key={f.flag_key} style={{ padding: 14 }}>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr auto',
-              gap: 12,
-              alignItems: 'start',
-            }}
-          >
-            <div>
-              <div
+
+      {/* Flags table */}
+      <div
+        style={{
+          border: `3px solid ${BRAND.charcoal}`,
+          boxShadow: px(),
+          background: BRAND.white,
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '2fr 3fr 60px 1fr 60px 1fr 80px',
+            padding: '8px 14px',
+            background: BRAND.charcoal,
+          }}
+        >
+          {['FLAG KEY', 'DESCRIPTION', 'ON/OFF', 'TIERS', 'ROLLOUT', 'UPDATED', 'ACTIONS'].map(
+            (h) => (
+              <span
+                key={h}
                 style={{
                   fontFamily: "'Press Start 2P', monospace",
-                  fontSize: 10,
+                  fontSize: 8,
+                  color: BRAND.sky,
+                }}
+              >
+                {h}
+              </span>
+            ),
+          )}
+        </div>
+        {/* Rows */}
+        {flags.length === 0 ? (
+          <div
+            style={{
+              padding: '14px',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 13,
+              color: BRAND.charcoal,
+            }}
+          >
+            No flags found.
+          </div>
+        ) : (
+          flags.map((f, i) => (
+            <div
+              key={f.flag_key}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '2fr 3fr 60px 1fr 60px 1fr 80px',
+                padding: '12px 14px',
+                borderBottom: `1px solid ${BRAND.pageBed}`,
+                alignItems: 'center',
+                background: i % 2 === 0 ? BRAND.white : BRAND.pageBed,
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "'Press Start 2P', monospace",
+                  fontSize: 8,
                   color: BRAND.blue,
-                  marginBottom: 6,
                 }}
               >
                 {f.flag_key}
-              </div>
-              <textarea
-                defaultValue={f.description ?? ''}
-                onBlur={(e) =>
-                  upsert({ flag_key: f.flag_key, description: e.target.value })
+              </span>
+              <span
+                style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 13,
+                  color: '#374151',
+                }}
+              >
+                {f.description ?? '—'}
+              </span>
+              <Toggle
+                on={f.default_enabled}
+                onChange={() =>
+                  upsert({ flag_key: f.flag_key, default_enabled: !f.default_enabled })
                 }
-                rows={2}
-                style={{ ...inputStyle, marginBottom: 6 }}
               />
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                <label
-                  style={{
-                    fontFamily: "'Press Start 2P', monospace",
-                    fontSize: 9,
-                    color: BRAND.charcoal,
-                    display: 'flex',
-                    gap: 4,
-                    alignItems: 'center',
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    defaultChecked={f.default_enabled}
-                    onChange={(e) =>
-                      upsert({ flag_key: f.flag_key, default_enabled: e.target.checked })
-                    }
-                  />
-                  DEFAULT
-                </label>
-                <label
-                  style={{
-                    fontFamily: "'Press Start 2P', monospace",
-                    fontSize: 9,
-                    color: BRAND.charcoal,
-                  }}
-                >
-                  ROLLOUT %
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    defaultValue={f.rollout_pct}
-                    onBlur={(e) =>
-                      upsert({
-                        flag_key: f.flag_key,
-                        rollout_pct: parseInt(e.target.value, 10) || 0,
-                      })
-                    }
-                    style={{ ...inputStyle, width: 80, marginLeft: 6 }}
-                  />
-                </label>
-                <label
-                  style={{
-                    fontFamily: "'Press Start 2P', monospace",
-                    fontSize: 9,
-                    color: BRAND.charcoal,
-                  }}
-                >
-                  TIERS (comma)
-                  <input
-                    defaultValue={f.enabled_tiers.join(',')}
-                    onBlur={(e) =>
-                      upsert({
-                        flag_key: f.flag_key,
-                        enabled_tiers: e.target.value
-                          .split(',')
-                          .map((s) => s.trim())
-                          .filter(Boolean),
-                      })
-                    }
-                    style={{ ...inputStyle, width: 160, marginLeft: 6 }}
-                  />
-                </label>
+              <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                {(f.enabled_tiers ?? []).map((t) => (
+                  <span
+                    key={t}
+                    style={{
+                      fontFamily: "'Press Start 2P', monospace",
+                      fontSize: 7,
+                      padding: '2px 4px',
+                      background: `${BRAND.sky}44`,
+                      border: `1px solid ${BRAND.charcoal}`,
+                      color: BRAND.blue,
+                    }}
+                  >
+                    {t}
+                  </span>
+                ))}
               </div>
+              <span
+                style={{
+                  fontFamily: "'Press Start 2P', monospace",
+                  fontSize: 9,
+                  color: f.rollout_pct === 100 ? BRAND.green : BRAND.amber,
+                }}
+              >
+                {f.rollout_pct}%
+              </span>
+              <span
+                style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 12,
+                  color: '#9CA3AF',
+                }}
+              >
+                {f.updated_at ? new Date(f.updated_at).toLocaleDateString() : '—'}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  upsert({ flag_key: f.flag_key, default_enabled: !f.default_enabled })
+                }
+                disabled={busy === f.flag_key}
+              >
+                Toggle
+              </Button>
             </div>
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => remove(f.flag_key)}
-              disabled={busy === f.flag_key}
-            >
-              Delete
+          ))
+        )}
+      </div>
+
+      {/* New flag form */}
+      {showNewFlag ? (
+        <Card style={{ padding: 14 }}>
+          <Eyebrow>{'// NEW FLAG'}</Eyebrow>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 6 }}>
+            <input
+              placeholder="snake_case_key"
+              value={newKey}
+              onChange={(e) => setNewKey(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && createFlag()}
+              style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 13,
+                padding: '6px 10px',
+                border: `3px solid ${BRAND.charcoal}`,
+                background: BRAND.white,
+                color: BRAND.charcoal,
+                outline: 'none',
+                borderRadius: 0,
+                maxWidth: 280,
+              }}
+            />
+            <Button variant="primary" size="sm" onClick={createFlag} disabled={busy === newKey}>
+              Create
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => { setShowNewFlag(false); setNewKey(''); }}>
+              Cancel
             </Button>
           </div>
         </Card>
-      ))}
+      ) : null}
+
+      <div style={{ marginTop: 4, display: 'flex', justifyContent: 'flex-end' }}>
+        <Button variant="blue" size="sm" onClick={() => setShowNewFlag(true)}>
+          + New Flag
+        </Button>
+      </div>
     </div>
   );
 }

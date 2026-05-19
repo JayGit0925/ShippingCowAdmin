@@ -24,7 +24,22 @@ export default {
         body: ["'DM Sans'", 'sans-serif'],
         pixel: ["'Press Start 2P'", 'monospace'],
       },
+      spacing: {
+        'xs': '4px',
+        'sm-brand': '8px',
+        'md-brand': '16px',
+        'lg-brand': '24px',
+        'xl-brand': '48px',
+      },
       borderRadius: { none: '0' },
+      letterSpacing: {
+        'display': '0.01em',
+        'pixel':   '0.03em',
+      },
+      lineHeight: {
+        'display': '1.1',
+        'body':    '1.6',
+      },
       boxShadow: {
         px: '4px 4px 0 #1A202C',
         'px-sm': '2px 2px 0 #1A202C',

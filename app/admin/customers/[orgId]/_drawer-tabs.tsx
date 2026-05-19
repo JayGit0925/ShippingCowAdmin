@@ -2,7 +2,7 @@
 import { useState, type ReactNode } from 'react';
 import { TabBar } from '@/components/ui/tab-bar';
 
-const TABS = ['Overview', 'Members', 'Notes', 'Audit', 'Tickets'] as const;
+const TABS = ['Overview', 'Activity', 'Usage', 'Subscriptions', 'Notes'] as const;
 type Tab = (typeof TABS)[number];
 
 export function DrawerTabs({

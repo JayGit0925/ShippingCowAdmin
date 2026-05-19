@@ -9,6 +9,7 @@ import { adminClient } from '@/lib/supabase/admin';
 import { SUPABASE_CONFIGURED } from '@/lib/env';
 import { fetchOrg } from '@/lib/customers';
 import { DrawerTabs } from './_drawer-tabs';
+import { ConfirmActionButton } from './_confirm-action';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,13 +20,6 @@ type Audit = {
   action: string;
   actor_user_id: string;
   reason: string | null;
-};
-type TicketRow = {
-  id: string;
-  subject: string;
-  status: string;
-  priority: string;
-  updated_at: string;
 };
 type MemberRow = {
   user_id: string;
@@ -42,7 +36,7 @@ export default async function OrgDrawerPage({
   if (!org) notFound();
 
   const supabase = adminClient();
-  const [notesRes, auditRes, ticketsRes, membersRes] = await Promise.all([
+  const [notesRes, auditRes, membersRes] = await Promise.all([
     supabase
       .from('admin_notes')
       .select('id, note, created_at, created_by')
@@ -56,12 +50,6 @@ export default async function OrgDrawerPage({
       .order('occurred_at', { ascending: false })
       .limit(100),
     supabase
-      .from('support_tickets')
-      .select('id, subject, status, priority, updated_at')
-      .eq('org_id', params.orgId)
-      .order('updated_at', { ascending: false })
-      .limit(50),
-    supabase
       .from('org_members')
       .select('user_id, last_login')
       .eq('org_id', params.orgId),
@@ -69,7 +57,6 @@ export default async function OrgDrawerPage({
 
   const notes = (notesRes.data ?? []) as Note[];
   const audit = (auditRes.data ?? []) as Audit[];
-  const tickets = (ticketsRes.data ?? []) as TicketRow[];
   const members = (membersRes.data ?? []) as MemberRow[];
 
   return (
@@ -112,31 +99,51 @@ export default async function OrgDrawerPage({
         </p>
       </div>
 
+      {/* Quick action buttons — 5 required: Suspend · Reactivate · Override Tier · Add Note · Impersonate */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <ActionForm action="suspend" orgId={org.id} label="Suspend" variant="danger" />
+        <ConfirmActionButton
+          orgId={org.id}
+          orgName={org.name}
+          action="suspend"
+          label="Suspend"
+          variant="danger"
+          confirmWord="SUSPEND"
+          description="Suspending this org will immediately block all logins and shipment creation. This action is logged and reversible."
+        />
         <ActionForm action="reactivate" orgId={org.id} label="Reactivate" variant="primary" />
-        <ActionForm action="tier-override" orgId={org.id} label="Tier override" variant="ghost" />
-        <ActionForm action="impersonate" orgId={org.id} label="Impersonate owner" variant="dark" />
-        <ActionForm action="force-logout" orgId={org.id} label="Force logout all" variant="ghost" />
+        <ConfirmActionButton
+          orgId={org.id}
+          orgName={org.name}
+          action="tier-override"
+          label="Override Tier"
+          variant="ghost"
+          confirmWord="OVERRIDE"
+          description="Manually overriding the tier bypasses normal billing tier logic. This action is logged and may affect pricing."
+        />
+        <AddNoteButton orgId={org.id} />
+        <ActionForm action="impersonate" orgId={org.id} label="Impersonate" variant="dark" />
       </div>
 
       <DrawerTabs
         panels={{
           Overview: (
             <Card style={{ padding: 18 }}>
-              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: BRAND.charcoal }}>
-                {`${org.members} member${org.members === 1 ? '' : 's'}. Last active: ${
-                  org.last_active ? new Date(org.last_active).toISOString().slice(0, 10) : '—'
-                }.`}
-              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: BRAND.charcoal, margin: 0 }}>
+                  {`${org.members} member${org.members === 1 ? '' : 's'}. Last active: ${
+                    org.last_active ? new Date(org.last_active).toISOString().slice(0, 10) : '—'
+                  }.`}
+                </p>
+                <MembersTable members={members} />
+              </div>
             </Card>
           ),
-          Members: (
+          Activity: (
             <Card style={{ padding: 0 }}>
               <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-                {members.map((m) => (
+                {audit.map((r) => (
                   <li
-                    key={m.user_id}
+                    key={r.id}
                     style={{
                       padding: '10px 14px',
                       borderBottom: `1px solid ${BRAND.sky}`,
@@ -145,11 +152,21 @@ export default async function OrgDrawerPage({
                       color: BRAND.charcoal,
                     }}
                   >
-                    <code>{m.user_id}</code> · last login{' '}
-                    {m.last_login ? new Date(m.last_login).toISOString().slice(0, 16) : '—'}
+                    <span
+                      style={{
+                        fontFamily: "'Press Start 2P', monospace",
+                        fontSize: 8,
+                        color: BRAND.blue,
+                        marginRight: 8,
+                      }}
+                    >
+                      {new Date(r.occurred_at).toISOString().slice(0, 16).replace('T', ' ')}
+                    </span>
+                    <strong>{r.action}</strong>
+                    {r.reason ? ` — ${r.reason}` : ''}
                   </li>
                 ))}
-                {members.length === 0 ? (
+                {audit.length === 0 ? (
                   <li
                     style={{
                       padding: 24,
@@ -159,15 +176,27 @@ export default async function OrgDrawerPage({
                       color: BRAND.charcoal,
                     }}
                   >
-                    No members.
+                    No activity yet.
                   </li>
                 ) : null}
               </ul>
             </Card>
           ),
+          Usage: (
+            <Card style={{ padding: 18 }}>
+              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: BRAND.charcoal, margin: 0 }}>
+                No usage data yet.
+              </p>
+            </Card>
+          ),
+          Subscriptions: (
+            <Card style={{ padding: 18 }}>
+              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: BRAND.charcoal, margin: 0 }}>
+                No subscription data yet.
+              </p>
+            </Card>
+          ),
           Notes: <NotesPanel orgId={org.id} notes={notes} />,
-          Audit: <AuditPanel rows={audit} />,
-          Tickets: <TicketsPanel rows={tickets} />,
         }}
       />
     </div>
@@ -191,6 +220,42 @@ function ActionForm({
         {label}
       </Button>
     </form>
+  );
+}
+
+function AddNoteButton({ orgId }: { orgId: string }) {
+  return (
+    <form action={`/api/admin/orgs/${orgId}/note` as Route} method="post">
+      <Button variant="ghost" size="sm">
+        Add Note
+      </Button>
+    </form>
+  );
+}
+
+function MembersTable({ members }: { members: MemberRow[] }) {
+  if (members.length === 0) return null;
+  return (
+    <div>
+      <Eyebrow style={{ marginBottom: 8 }}>// MEMBERS</Eyebrow>
+      <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+        {members.map((m) => (
+          <li
+            key={m.user_id}
+            style={{
+              padding: '8px 0',
+              borderBottom: `1px solid ${BRAND.sky}`,
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 13,
+              color: BRAND.charcoal,
+            }}
+          >
+            <code>{m.user_id}</code> · last login{' '}
+            {m.last_login ? new Date(m.last_login).toISOString().slice(0, 16) : '—'}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -267,105 +332,6 @@ function NotesPanel({ orgId, notes }: { orgId: string; notes: Note[] }) {
             }}
           >
             No notes yet.
-          </li>
-        ) : null}
-      </ul>
-    </Card>
-  );
-}
-
-function AuditPanel({ rows }: { rows: Audit[] }) {
-  return (
-    <Card style={{ padding: 0 }}>
-      <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-        {rows.map((r) => (
-          <li
-            key={r.id}
-            style={{
-              padding: '10px 14px',
-              borderBottom: `1px solid ${BRAND.sky}`,
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: 13,
-              color: BRAND.charcoal,
-            }}
-          >
-            <span
-              style={{
-                fontFamily: "'Press Start 2P', monospace",
-                fontSize: 8,
-                color: BRAND.blue,
-                marginRight: 8,
-              }}
-            >
-              {new Date(r.occurred_at).toISOString().slice(0, 16).replace('T', ' ')}
-            </span>
-            <strong>{r.action}</strong>
-            {r.reason ? ` — ${r.reason}` : ''}
-          </li>
-        ))}
-        {rows.length === 0 ? (
-          <li
-            style={{
-              padding: 24,
-              textAlign: 'center',
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: 14,
-              color: BRAND.charcoal,
-            }}
-          >
-            No audit entries for this org.
-          </li>
-        ) : null}
-      </ul>
-    </Card>
-  );
-}
-
-function TicketsPanel({ rows }: { rows: TicketRow[] }) {
-  return (
-    <Card style={{ padding: 0 }}>
-      <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-        {rows.map((t) => (
-          <li
-            key={t.id}
-            style={{
-              padding: '10px 14px',
-              borderBottom: `1px solid ${BRAND.sky}`,
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: 13,
-              color: BRAND.charcoal,
-            }}
-          >
-            <Link
-              href={`/admin/tickets/${t.id}` as Route}
-              style={{ color: BRAND.blue, textDecoration: 'none', fontWeight: 600 }}
-            >
-              {t.subject}
-            </Link>
-            {' '}
-            <span
-              style={{
-                fontFamily: "'Press Start 2P', monospace",
-                fontSize: 8,
-                color: BRAND.charcoal,
-                marginLeft: 8,
-              }}
-            >
-              {t.status.toUpperCase()} · {t.priority.toUpperCase()}
-            </span>
-          </li>
-        ))}
-        {rows.length === 0 ? (
-          <li
-            style={{
-              padding: 24,
-              textAlign: 'center',
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: 14,
-              color: BRAND.charcoal,
-            }}
-          >
-            No tickets for this org.
           </li>
         ) : null}
       </ul>
